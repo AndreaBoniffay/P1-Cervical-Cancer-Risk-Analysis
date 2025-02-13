@@ -1,0 +1,12 @@
+rmd_files:
+  - introduction.rmd
+  - main.rmd
+  - preprocessing.rmd
+  - univariate_analysis.rmd
+  - bivariate_analysis.rmd
+  - multivariate_descriptive_analysis.rmd
+  - multivariate_explicative_supervised_analysis.rmd
+
+  
+  
+delete_merged_file: yes
