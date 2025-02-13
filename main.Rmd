@@ -1,0 +1,162 @@
+
+
+```{r setup, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 10)
+```
+
+```{r packages managments, echo = FALSE, message=FALSE, warning=FALSE}
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00383/risk_factors_cervical_cancer.csv"
+
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
+if (!requireNamespace("GGally", quietly = TRUE)) install.packages("GGally")
+if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
+if (!requireNamespace("skimr", quietly = TRUE)) install.packages("skimr")
+if (!requireNamespace("gtsummary", quietly = TRUE)) install.packages("gtsummary")
+if (!requireNamespace("bookdown", quietly = TRUE)) install.packages("bookdown")
+if (!requireNamespace("kableExtra", quietly = TRUE)) install.packages("kableExtra")
+if (!requireNamespace("gridExtra", quietly = TRUE)) install.packages("gridExtra")
+if (!requireNamespace("heatmaply", quietly = TRUE)) install.packages("heatmaply")
+if (!requireNamespace("grid", quietly = TRUE)) install.packages("grid")
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+if (!requireNamespace("purrr", quietly = TRUE)) install.packages("purrr")
+if (!requireNamespace("moments", quietly = TRUE)) install.packages("moments")
+if (!requireNamespace("FactoMineR", quietly = TRUE)) install.packages("FactoMineR")
+if (!requireNamespace("explor", quietly = TRUE)) install.packages("explor")
+if (!requireNamespace("missMDA", quietly = TRUE)) install.packages("missMDA")
+if (!requireNamespace("mice", quietly = TRUE)) install.packages("mice")
+if (!requireNamespace("lattice", quietly = TRUE)) install.packages("lattice")
+if (!requireNamespace("VIM", quietly = TRUE)) install.packages("VIM")
+if (!requireNamespace("Factoshiny", quietly = TRUE)) install.packages("Factoshiny")
+if (!requireNamespace("factoextra", quietly = TRUE)) install.packages("factoextra")
+if (!requireNamespace("NbClust", quietly = TRUE)) install.packages("NbClust")
+if (!requireNamespace("ROCR", quietly = TRUE)) install.packages("ROCR")
+if (!requireNamespace("pROC", quietly = TRUE)) install.packages("pROC")
+if (!requireNamespace("visualize", quietly = TRUE)) install.packages("visualize")
+if (!requireNamespace("caret", quietly = TRUE)) install.packages("caret")
+if (!requireNamespace("car", quietly = TRUE)) install.packages("car")
+if (!requireNamespace("effsize", quietly = TRUE)) install.packages("effsize")
+if (!requireNamespace("rcompanion", quietly = TRUE)) install.packages("rcompanion")
+if (!requireNamespace("performance", quietly = TRUE)) install.packages("performance")
+if (!requireNamespace("questionr", quietly = TRUE)) install.packages("questionr")
+if (!requireNamespace("MASS", quietly = TRUE)) install.packages("MASS")
+if (!requireNamespace("generalhoslem", quietly = TRUE)) install.packages("generalhoslem")
+if (!requireNamespace("ResourceSelection", quietly = TRUE)) install.packages("ResourceSelection")
+
+
+library(dplyr) #select
+library(GGally) # plots
+library(tidyverse) #readr (csv)
+library(skimr)
+library(gtsummary) # patients characteristics
+library(gt)# modifie gtsummary table
+library(bookdown)
+library(kableExtra) # tables aesthetics
+library(gridExtra) # plots en colonnes 
+library(heatmaply) # headmap + normalisation
+library(grid) 
+library(devtools)
+library(purrr) #map
+library(moments)#skewness kurtosis
+library(FactoMineR)# ACP
+library(explor)# visual acp, amc, fadm
+library(missMDA)# imputation fadm
+library(mice)#imputation 
+library(lattice)#multiplot imputation display
+library(VIM)#missing data vizualisation
+library(Factoshiny) #viz Afdm
+library(factoextra) #vis kmean
+library(NbClust)# clustering
+library(ROCR)#viz roc curve
+library(pROC)#roc curve
+library(visualize)#viz glm
+library(caret)#importance des variables
+library(car)#levene
+library(effsize)#cohen s
+library(rcompanion)#cramer V
+library(performance)# vif, homoscedasticite, residus
+library(questionr)#viz odds ratios
+library(MASS)#stepAIC
+library(generalhoslem)#test de Hosmer 
+library(ResourceSelection)#et Lemeshow
+```
+
+```{r import data, echo = FALSE, message=FALSE, warning=FALSE}
+
+#'________________________________________________
+#'
+#' LOAD DATA
+#'________________________________________________
+
+#data_original <- readr::read_csv(url)
+data_original <- readr::read_csv('data_cervical_cancer.csv')
+
+```
+
+
+```{r settings txt files, echo = FALSE, message=FALSE, warning=FALSE}
+
+#'________________________________________________
+#'
+#' TEXT FILES, DATABASE SETTINGS
+#'________________________________________________
+
+
+#variable patients set and feature sets
+
+Feature_set <- "colnames.txt"
+Feature_informations <- "col_informations.txt"
+
+#path to patient sets 
+path_txt <- "txt_file/"
+
+#path to feature sets
+path_txt <- "txt_file/"
+path_to_Feature_set <- paste0(path_txt,Feature_set)
+path_to_Feature_informations  <- paste0(path_txt,Feature_informations)
+
+
+#set qualitative variables
+nominal_variable_names <- c(
+  "Smokes", "HormonalContraceptives", "IUD", "STDs",
+  "STDsCondylomatosis", "STDsCervicalCondylomatosis",
+  "STDsVaginalCondylomatosis", "STDsVulvoPerinealCondylomatosis",
+  "STDsSyphilis", "STDsPelvicInflammatoryDisease", "STDsGenitalHerpes",
+  "STDsMolluscumContagiosum", "STDsAIDS", "STDsHIV", "STDsHepatitisB",
+  "STDsHPV", "DxCancer", "DxCIN", "DxHPV", "Dx", "Hinselmann",
+  "Schiller", "Cytology", "Biopsy"
+)
+ordinal_variable_names <- c()
+
+qualitative_variable_names <- c(nominal_variable_names,ordinal_variable_names)
+
+
+#set quantitative variables
+discrete_variable_names <- c(
+  "NumberOfSexualPartners", "FirstSexualIntercourse", "NumOfPregnancies",
+  "STDsNumber", "STDsNumberOfDiagnosis", "TimeSinceFirstSTDs",
+  "TimeSinceLastSTDs"
+  )
+continuous_variable_names <- c(
+  "Age", "SmokesYears", "SmokesPacksPerYear",
+  "HormonalContraceptivesYears", "IUDYears"
+  )
+quantitative_variable_names <- c( discrete_variable_names, continuous_variable_names)
+
+#variable type list
+bool_variable_list_names <- c("Smokes", "HormonalContraceptives",
+"DxCancer", "DxCIN", "DxHPV", "Dx", "Hinselmann", "Schiller",
+"Cytology", "Biopsy", "STDs", "IUD", "STDsCondylomatosis",
+"STDsCervicalCondylomatosis", "STDsVaginalCondylomatosis",
+"STDsVulvoPerinealCondylomatosis", "STDsSyphilis",
+"STDsPelvicInflammatoryDisease", "STDsGenitalHerpes",
+"STDsMolluscumContagiosum", "STDsAIDS", "STDsHIV", "STDsHepatitisB", "STDsHPV")
+
+#set outcome variable
+Outcome = "DxCancer"
+```
+
+
+
+
+
+

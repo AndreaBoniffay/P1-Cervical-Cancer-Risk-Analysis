@@ -1,0 +1,352 @@
+# Multivariate Analysis
+
+To improve the results of the multivariate analysis, data has been normalised.  
+
+>`scale()` is used from the heatmaply library. description: `scale()` use Z-score.  
+This method is robust to extreme values and retains information on the variance. 
+
+## Descriptive 
+
+### Standardisation & Dummification
+
+```{r correlation matrix function, echo = FALSE, message=FALSE, warning=FALSE, fig.width = 13, fig.height = 13}
+
+#'_________________________________________
+#' 
+#' Normalised (quanti) data correlation matrix   ----
+#'_________________________________________
+
+
+#cor() This function filters out any non-numerical variables and provides correlations only between quantitative variables. 
+#Best for datasets with only a few variables. The correlation matrix is returned (with class matrix).
+
+get_correlation_matrix <- function(data, Outcome = NULL, use = "pairwise.complete.obs") {
+
+  # Select columns based on the presence of ID and Outcome
+  if ("ID" %in% colnames(data)) {
+    if (!is.null(Outcome)) {
+      cor_matrix <- cor(data %>% dplyr::select(-ID, -Outcome), use = use)
+    } else {
+      cor_matrix <- cor(data %>% dplyr::select(-ID), use = use)
+    }
+  } else {
+    if (!is.null(Outcome)) {
+      cor_matrix <- cor(data %>% dplyr::select(-Outcome), use = use)
+    } else {
+      cor_matrix <- cor(data, use = use)
+    }
+  }
+
+  # Create the heatmap to visualize the correlation matrix
+  ggplot(data = as.data.frame(as.table(cor_matrix)), aes(Var1, Var2, fill = Freq)) +
+    geom_tile() +
+    geom_text(aes(label = round(Freq, 2)), color = "black", size = 3) +
+    scale_fill_gradient2(low = "#3838ff", high = "#ff4444", mid = "#ffffff", midpoint = 0, limit = c(-1, 1), space = "Lab", name = "Correlation") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+    coord_fixed() +
+    labs(title = "", x = "", y = "")
+}
+
+```
+
+**Figure 5 : Heatmap on initial data**
+
+```{r headmap on data, echo = FALSE, message=FALSE, warning=FALSE, fig.height = 15}
+
+#'__________________________________
+#' 
+#' Initial data HEADMAP   ----
+#'__________________________________
+
+headmap<- heatmaply(
+  data, 
+  xlab = "Features",
+  ylab = "Patients", 
+  main = "data headmap"
+)
+```
+
+
+```{r normalisation, echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4} 
+
+#'______________________________________________
+#' 
+#' STANDARDISATION (Z-score using scale())  ----
+#'______________________________________________
+
+#remove ID from the selection 
+normalised_data <- data%>% dplyr::select(-ID)
+#only quantitative selection 
+quantitative_names<-colnames(normalised_data) %in% quantitative_variable_names
+#standardisation with scale() fonction
+normalised_data[quantitative_names] <- scale(normalised_data[quantitative_names])
+
+```
+
+
+```{r create dummy variables, echo = FALSE, message=FALSE, warning=FALSE,fig.height=7}
+
+#'__________________________________________________
+#' 
+#' SET DUMMY variables on normalised dataset    ----
+#'__________________________________________________
+#'
+
+data_dummy <- normalised_data
+#excpet DxCancer to compare on patient with/without cancer diag
+qualitative_without_Dxcancer <- setdiff(qualitative, "DxCancer")
+#Dummification
+data_dummy[,qualitative_without_Dxcancer] <- lapply(normalised_data[, qualitative_without_Dxcancer], as.numeric)
+
+```
+
+**Figure 6 : Correlation matrix on standardised and dummy data**
+
+```{r correlation matrix on dummy data, echo = FALSE, message=FALSE, warning=FALSE, fig.width = 13, fig.height = 13}
+
+#'_________________________________________
+#' 
+#' dummy data correlation matrix   ----
+#'_________________________________________
+
+#outcome = "DxCancer"
+correlation_matrix<-get_correlation_matrix(data_dummy,"DxCancer")
+#correlation_matrix$data est de type facteur, alors lorsqu’elle est manipulée, les valeurs renvoyées sont les indices des niveaux du facteur, pas les noms eux-mêmes.
+correlation_matrix$data$Var1 <- as.character(correlation_matrix$data$Var1)
+colinear_variables_list<-unique(correlation_matrix$data$Var1[correlation_matrix$data$Freq != 1 & correlation_matrix$data$Freq >= 0.8])
+correlation_matrix
+```
+
+On this figure, the values of the Pearson 
+correlation coefficients (noted α) are indicated for each pair of variables.  
+
+There are many variables that seem to have a linear relationship in the data frame 
+
+**Figure 6a : High correlation matrix (<0.8)**
+```{r colinearity treatment, echo = FALSE, message=FALSE, warning=FALSE,fig.height=7}
+
+#'____________________
+#' 
+#' COLINEARITY  ----
+#'____________________
+
+#etude de la colinearité
+
+p<-get_correlation_matrix(data_dummy[ , colnames(data_dummy) %in% colinear_variables_list])
+p
+```
+
+
+**Figure 6b : High correlation matrix (<0.8)**
+
+The variable STDsCondylomatosis includes all the information from STDsVaginalCondylomatosis 
+and STDsVulvoPerinealCondylomatosis. the latter two are therefore deleted in favour 
+of STDsCondylomatosis. 
+
+```{r , echo = FALSE, message=FALSE, warning=FALSE}
+#verification de la coherence des condylomatosis
+.condylo_data<-data_dummy[,c("STDsCondylomatosis","STDsVaginalCondylomatosis","STDsVulvoPerinealCondylomatosis")]
+length(data_dummy$STDsCondylomatosis[which(data_dummy$STDsVaginalCondylomatosis == 0 & data_dummy$STDsVulvoPerinealCondylomatosis==0 & data_dummy$STDsCondylomatosis==1)])
+
+data_dummy_post_colinear_analysis <- data_dummy %>% dplyr::select(-c("STDsVaginalCondylomatosis","STDsVulvoPerinealCondylomatosis"))
+
+p<-get_correlation_matrix(data_dummy_post_colinear_analysis[ , colnames(data_dummy_post_colinear_analysis) %in% colinear_variables_list])
+p
+```
+
+
+
+**Figure 6c : High correlation matrix (<0.8)**
+
+pelvic inflammatory disease is logically correlated at over 80% for all 
+infectious variables. Does not provide additional information. STDsPelvicInflammatoryDisease is removed
+
+```{r , echo = FALSE, message=FALSE, warning=FALSE}
+data_dummy_post_colinear_analysis <- data_dummy_post_colinear_analysis %>% dplyr::select(-c("STDsPelvicInflammatoryDisease"))
+
+p<-get_correlation_matrix(data_dummy_post_colinear_analysis[ , colnames(data_dummy_post_colinear_analysis) %in% colinear_variables_list])
+p
+```
+
+
+**Figure 6d : High correlation matrix (<0.8)**
+
+Viral_inf_HPV_HBV_GenHerp_Molluscum is created to condense and group informations about viral infection ("STDsGenitalHerpes","STDsMolluscumContagiosum","STDsHepatitisB","STDsHPV","STDsHIV")
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+#creation de la variable Viral_inf_HPV_HBV_HIV_GenHerp_Molluscum
+#infections virales : molluscum + genital herpes + HPV + HBV + HIV
+#pas d'apport d'information supplémentaires que de les traiter séparéments
+
+data_dummy_post_colinear_analysis$Viral_inf_HPV_HBV_GenHerp_Molluscum <- ifelse(data_dummy_post_colinear_analysis$STDsGenitalHerpes==1 | data_dummy_post_colinear_analysis$STDsMolluscumContagiosum==1 | data_dummy_post_colinear_analysis$STDsHepatitisB==1 | data_dummy_post_colinear_analysis$STDsHPV==1 | data_dummy_post_colinear_analysis$STDsHIV==1,1,0)
+data_dummy_post_colinear_analysis <- data_dummy_post_colinear_analysis %>% dplyr::select(-c("STDsGenitalHerpes","STDsMolluscumContagiosum","STDsHepatitisB","STDsHPV","STDsHIV"))
+
+
+colinear_variables_list <-  c(colinear_variables_list,"Viral_inf_HPV_HBV_GenHerp_Molluscum")
+
+p<-get_correlation_matrix(data_dummy_post_colinear_analysis[ , colnames(data_dummy_post_colinear_analysis) %in% colinear_variables_list])
+p
+```
+
+
+
+**Figure 7 : Correlation matrix with colinearity reduction**
+```{r, echo = FALSE, message=FALSE, warning=FALSE, fig.width = 13, fig.height = 13}
+p<-get_correlation_matrix(data_dummy_post_colinear_analysis,"DxCancer")
+p
+```
+
+**Figure 8 : Heatmap on standardised data**
+
+```{r headmap on normalised data, echo = FALSE, message=FALSE, warning=FALSE, fig.height = 15}
+
+#'__________________________________
+#' 
+#' Normalised data HEADMAP   ----
+#'__________________________________
+
+headmap_normalized<- heatmaply(
+  data_dummy, 
+  xlab = "Features",
+  ylab = "Patients", 
+  main = "Normalised an dummy data headmap"
+)
+headmap_normalized
+```
+
+
+
+### PCA (Principal Composante Analysis)
+
+PCA: The aim is to understand the structure 
+of the data and visualize relationships between variables. 
+
+**Figure 9 : ACP results**
+
+```{r PCA , echo = FALSE, message=FALSE, warning=FALSE, fig.height = 6}
+
+#'_______________________________________________
+#' 
+#' PCA on Normalised quantitative data    ----
+#'_______________________________________________
+#' 
+
+# Quantitative column selection for the PCA
+selected_columns <- c(which(quantitative_names), which(colnames(normalised_data) == "DxCancer"))
+
+# PCA with "DxCancer" inclusion as qualitative sup.variable to compare
+res_PCA <- PCA(normalised_data[, selected_columns], quali.sup = which(colnames(normalised_data[, selected_columns]) == "DxCancer"))
+
+#Shinny app to visualise PCA
+#explor::explor(res_PCA)
+res_prepared <- explor::prepare_results(res_PCA)
+
+
+res_var12 <- explor::PCA_var_plot(res_prepared, xax = 1, yax = 2, var_sup = FALSE, 
+                                  var_sup_choice = c(), var_lab_min_contrib = 0, 
+                                  col_var = NULL, labels_size = 10, scale_unit = TRUE, 
+                                  transitions = TRUE, labels_positions = NULL)
+
+res_var13 <- explor::PCA_var_plot(res_prepared, xax = 1, yax = 3, var_sup = FALSE, 
+                                  var_sup_choice = c(), var_lab_min_contrib = 0, 
+                                  col_var = NULL, labels_size = 10, scale_unit = TRUE, 
+                                  transitions = TRUE, labels_positions = NULL, 
+                                  xlim = c(-1.1, 1.1), ylim = c(-1.1, 1.1))
+
+res_var23 <- explor::PCA_var_plot(res_prepared, xax = 2, yax = 3, var_sup = FALSE, 
+                                  var_sup_choice = c(), var_lab_min_contrib = 0, 
+                                  col_var = NULL, labels_size = 10, scale_unit = TRUE, 
+                                  transitions = TRUE, labels_positions = NULL, 
+                                  xlim = c(-1.1, 1.1), ylim = c(-1.1, 1.1))
+
+
+res_ind_pca <- explor::PCA_ind_plot(res_prepared, xax = 1, yax = 2, ind_sup = FALSE, 
+                                lab_var = NULL, ind_lab_min_contrib = 0, col_var = "DxCancer", 
+                                labels_size = 9, point_opacity = 0.5, opacity_var = NULL, 
+                                point_size = 64, ellipses = FALSE, transitions = TRUE, 
+                                labels_positions = NULL)
+
+
+res_var12
+res_var13
+res_var23
+res_ind_pca
+```
+
+### MCA (Multiple correspondence analysis)
+
+MCA: Similar to PCA, but used for qualitative data. 
+It seeks to represent the relationships between the modalities 
+of qualitative variables.
+
+**Figure 10 : MCA results**
+
+```{r ACM, echo = FALSE, message=FALSE, warning=FALSE, fig.height = 6}
+
+#'_______________________________________________
+#' 
+#' MCA on qualitative data    ----
+#'_______________________________________________
+#' 
+
+# Quantitative column selection for the ACM
+selected_columns <- c(which(colnames(data) %in% qualitative_variable_names))
+
+# MCA 
+res_MCA <- MCA(data[, selected_columns])
+
+#Shinny app to visualise MCA
+#explor::explor(res_MCA)
+res_prepared <- explor::prepare_results(res_MCA)
+
+res_var12 <- explor::MCA_var_plot(res_prepared, xax = 1, yax = 2, var_sup = FALSE, var_sup_choice = ,
+    var_lab_min_contrib = 0, col_var = "Variable", symbol_var = NULL, size_var = NULL,
+    size_range = c(10, 300), labels_size = 10, point_size = 56, transitions = TRUE,
+    labels_positions = NULL, labels_prepend_var = FALSE, xlim = c(-2.54, 4.09),
+    ylim = c(-1.13, 5.5))
+
+res_var13 <- explor::MCA_var_plot(res_prepared, xax = 1, yax = 3, var_sup = FALSE, var_sup_choice = ,
+    var_lab_min_contrib = 0, col_var = "Variable", symbol_var = NULL, size_var = NULL,
+    size_range = c(10, 300), labels_size = 10, point_size = 56, transitions = TRUE,
+    labels_positions = NULL, labels_prepend_var = FALSE, xlim = c(-5.01, 7.18),
+    ylim = c(-5.7, 6.49))
+
+res_ind_mca <- explor::MCA_ind_plot(res_prepared, xax = 1, yax = 2, ind_sup = FALSE, lab_var = NULL,
+    ind_lab_min_contrib = 0, col_var = "DxCancer", labels_size = 9, point_opacity = 0.5,
+    opacity_var = NULL, point_size = 64, ellipses = FALSE, transitions = TRUE,
+    labels_positions = NULL)
+
+res_var12
+res_var13
+res_ind_mca
+
+```
+
+### FAMD (Factoriel Analysis Mixed Data)
+
+FAMD: Combines qualitative and quantitative variables, 
+making it possible to explore mixed data without focusing on a target variable.
+
+**Figure 11 : FAMD results**
+
+```{r FAMD, echo = FALSE, message=FALSE, warning=FALSE, fig.height = 6}
+
+#'__________________________________________________
+#' 
+#' FAMD on qualitative and quantitative data    ----
+#'__________________________________________________
+#' 
+
+#FAMD
+res.FAMD<-FAMD(normalised_data,graph=FALSE)
+
+#plot results
+plot.FAMD(res.FAMD,title="Individuals and modalities graph", lab.ind=FALSE, lab.var=FALSE,graph.type = ("ggplot"))
+plot.FAMD(res.FAMD,axes=c(1,2),choix='var',title="Variable graph",lab.ind=FALSE, lab.var=TRUE,graph.type = ("ggplot"))
+plot.FAMD(res.FAMD, choix='quanti',title="Correlation circle",lab.ind=FALSE, lab.var=TRUE,graph.type = ("ggplot"))
+
+
+#res <- Factoshiny(normalised_data)
+```
+

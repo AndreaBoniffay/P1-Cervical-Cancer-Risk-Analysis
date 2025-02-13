@@ -1,0 +1,428 @@
+
+
+```{r functions, echo = FALSE, message=FALSE, warning=FALSE}
+
+#'check_event_count(), 
+#'check the event number in the targeted variable (DxCancer) for each variables.
+#' 
+#' data : dataframe of all tested variables
+#' target_var : targeted variable with events (DxCancer)
+#' quantitative_variable_list : list
+#' qualitative_variable_list : list
+#' threshold : numeric
+
+check_event_count <- function(data, target_var, quantitative_variable_list, qualitative_variable_list, threshold = 10) {
+
+  result <- list()
+
+#for all variables
+  for (var in names(data)) {
+  # if var is a quantitative variable 
+    if (var %in% quantitative_variable_list) {
+      #check nb of events in target variable
+      count <- sum(data[[target_var]] == 1 & !is.na(data[[var]]), na.rm = TRUE)
+      #if nb events is inf to 10 capture the name of the variable that deosn't get conditions
+      if(count<10){
+        result[[var]] <- var
+        result[[var]][2] <- count
+        }
+    } 
+  # if var is a qualitative variable
+    if (var %in% qualitative_variable_list) {
+      for (i in 1:length(unique(data[[var]]))){
+      #check nb of events in target variable for all levels of the variable var
+      factor_counts <- table(data[[var]], data[[target_var]])[ i, "TRUE"]
+      #capture the name of the variable that deosn't get conditions
+      if(factor_counts<10){
+        result[[var]] <- var
+        result[[var]][2] <- paste("level :",unique(data[[var]])[i])
+        result[[var]][3] <-  paste("event(s) :",factor_counts)
+        }
+    } 
+
+    } else { }
+  }
+  return(result)
+  
+} 
+
+
+#' error_rate(), 
+#' calculate the error rate
+#' 
+#' model : object from glm()
+#' data : dataframe 
+#' data_outcome : data$outcome
+
+error_rate <- function(model,data,data_outcome){
+  #proba beeing positive
+  pplus <- predict(model,newdata=data,type="response")
+  #get prediction
+  prediction <- as.factor(ifelse(pplus > 0.5,"positive","negative"))
+  #confusion matrix
+  mc <- table(data_outcome,prediction)
+  cat("Confusion matrix :\n")
+  print(mc)
+  #error rate
+  err.rate <- (mc[2,1]+mc[1,2])/sum(mc)
+  cat("\nError rate : ")
+  cat(err.rate)
+}
+
+```
+
+## Explicative
+
+### Logistic Regression model
+
+```{r set train/test list, echo = FALSE, message=FALSE, warning=FALSE,fig.height=7}
+
+#reproducibility
+set.seed(123)
+
+#'_____________________________
+#' 
+#' SET TRAIN/TEST LIST   ----
+#'_____________________________
+#'
+
+train_indices <- sample(1:nrow(data_dummy_post_colinear_analysis), size = 0.8 * nrow(data_dummy_post_colinear_analysis))
+
+# train/test creation (comment if list already exist)
+train_data <- data_dummy_post_colinear_analysis[train_indices, ]  # 80% training set
+test_data <- data_dummy_post_colinear_analysis[-train_indices, ]  # 20% testing set
+
+#creat csv for reproducibility (comment if list already exist)
+write.csv(train_data, "train_data.csv", row.names = FALSE)
+write.csv(test_data, "test_data.csv", row.names = FALSE)
+
+train_data = read.csv("train_data.csv")
+test_data = read.csv("test_data.csv")
+
+#check point distribution proportion
+p1 <- prop.table(table(data_dummy_post_colinear_analysis[[Outcome]]))
+p2 <- prop.table(table(train_data[[Outcome]]))
+p3 <- prop.table(table(test_data[[Outcome]]))
+
+```
+
+
+
+#### Modelisation : Model1
+
+```{r full logistic model modelisation, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+#'____________________________________
+#' 
+#' MODELISATION Model1
+#'____________________________________
+
+# Parameters estimation :
+logistic_model_all <- glm(DxCancer ~ ., family = binomial(link = 'logit'), data = train_data)
+
+# Description :
+summary(logistic_model_all)
+```
+
+______________________________________________________________________________
+
+**Hypothesis**
+
+- Independence
+- No colinearity 
+- Sufficient sample size
+- No extrem values for residue   
+
+>https://pmc.ncbi.nlm.nih.gov/articles/PMC8710907/
+______________________________________________________________________________
+
+***Independence :***  
+
+All the observations are independent. No time series or repeated measurements
+
+***Colinearity check :***  
+articles : colinearité
+
+```{r check_collinearity, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+check_collinearity(logistic_model_all)
+```
+
+***Size sample check :***  
+articles : 10 evenement pas feature
+```{r check_event_count, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+event_table <- as.data.frame(check_event_count(data_dummy_post_colinear_analysis,"DxCancer",quantitative_variable_names,qualitative_variable_names))
+event_table
+```
+
+***Extrem values for residue check :***  
+
+```{r check_residue, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+par(mfrow = c(2, 2))
+plot(logistic_model_all)
+check_model(logistic_model_all)
+```
+
+Extremely large logits (such as −150) can occur for several reasons:
+
+- Perfectly separable data:  
+The predictors allow for almost perfect separation, leading the model to produce probabilities 
+𝑝 that are extremely close to 0 or 1.
+
+- Outliers or high leverage:  
+One or more atypical observations exert a strong influence on the model.
+
+- Multicollinearity:  
+If the predictors are highly correlated, it can destabilize the estimation of the coefficients.
+
+#### Statistics evaluation : Model1
+
+
+**Likelihood ratio test :** 
+
+*H0* : no significant difference between model with predictors and without predictors (B0 only)  
+*H1* : significant difference between model with predictors and without predictors
+pvalue < 0.05 H0 rejected : at least one predictor is significantly related to the dependent variable
+
+```{r full logistic model Likelihood ratio test, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+#'________________________
+#' 
+#'STATISTIC EVALUATION 
+#'________________________
+
+#chi-2 global significativity test
+chi2 <- logistic_model_all$null.deviance - logistic_model_all$deviance
+#ddl 
+ddl <- logistic_model_all$df.null - logistic_model_all$df.residual
+#p-value
+pvalue <- pchisq(chi2,ddl,lower.tail = FALSE)
+
+```
+
+chi-2 global significativity test : `r chi2`  
+ddl : `r ddl`  
+pvalue : `r pvalue`  
+
+```{r full logistic model R2, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+
+#-- R2 McFadden
+LLa <- logistic_model_all$deviance/(-2)
+LL0 <- logistic_model_all$null.deviance/(-2)
+R2MF <- 1.0 - LLa/LL0
+
+#-- Cox-Snell
+La <- exp(LLa)
+L0 <- exp(LL0)
+R2CS <- 1.0 - (L0/La)^(2/nrow(train_data))
+
+#-- Nagelkerke
+R2N <- R2CS/(1.0 - L0^(2/nrow(train_data)))
+
+dfR2 <- data.frame("R2 McFadden" = R2MF, "R2 Cox-Snell" = R2CS, "R2 Nagelkerke" = R2N )
+dfR2
+```
+
+
+
+**Odds Ratios :** 
+
+```{r full logistic model OR, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+tbl_or <- tbl_regression(
+  logistic_model_all,
+  exponentiate = TRUE
+) |> 
+as_gt() |> 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police
+    ),
+    locations = list(
+      gt::cells_body(),              # Corps du tableau
+      gt::cells_column_labels(),  # En-têtes de colonnes
+      gt::cells_title()        
+    )
+  )
+tbl_or
+```
+
+We can note extreme values and unsuable confidence interval. (pb : colinearity, overfitting, imbalance)  
+(pas de surdispersion donc pas besoin de passer en quasi binomial)  
+  
+Remarques : le test de Wald sert à évaluer la significativité d’un prédicteur, tandis que le rapport de cotes mesure la force de l’effet.
+
+**Variable importance :** 
+
+```{r full logistic model VarImp, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+#' Variable importance :
+varImp(logistic_model_all)
+```
+
+proba very low and similar to each other the model possibly overlearns  
+
+
+#### Predictive evaluation : Model1
+
+```{r full logistic model prediction mod1, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+#'________________________
+#' 
+#'PREDICTIVE EVALUATION 
+#'________________________
+
+pred1 <- predict(logistic_model_all,newdata=test_data,type="response")
+pred1_class <- as.factor(ifelse(pred1 > 0.5,TRUE,FALSE))
+
+error_rate(logistic_model_all,test_data,test_data$DxCancer)
+```
+Probability predicts too well (little diversity in the data, very few cases and/or collinearity +++)  
+
+**Confusion matrix :** 
+
+```{r full logistic model conf matrix mod1, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+
+caret::confusionMatrix(data=pred1_class,reference=(as.factor(test_data$DxCancer)),positive="TRUE")
+# /!\ ne prend que factor pas de logical !
+```
+
+**Hosmer et Lemeshow test :** 
+
+*H0* : no significant difference between predicted data and observed data   
+*H1* : significant difference between predicted data and observed data  
+pvalue < 0.05 H0 rejected  
+
+```{r full logistic model HosmerLemeshow test, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+#Le test de Hosmer et Lemeshow (1989) 
+print(generalhoslem::logitgof(test_data$DxCancer,pred1))
+#print(hoslem.test(test_data$DxCancer, pred1, g = 3))
+```
+
+Remarque : negative ddl so, not enough data to properly divide your sample into three groups.
+
+**ROC curve model1 prediction:** 
+
+```{r full logistic model ROC, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+# ROC curve
+pred <- ROCR::prediction(pred1,test_data$DxCancer)
+graphs_roc <- ROCR::performance(pred,measure="tpr",x.measure="fpr")
+ROCR::plot(graphs_roc,xlab="TFP",ylab="TFP",col="darkblue")
+abline(a=0,b=1)
+```
+
+```{r}
+#test 1 
+
+#creation de meta-niveau 
+
+#codage imbriqué pour indiquer une gradation
+
+# attention, codage 1, 2, 3 
+#niv1 <- ifelse(donnees$ALCOOL >= 1, 1, 0)
+#niv2 <- ifelse(donnees$ALCOOL >= 6, 1, 0)
+#niv3 <- ifelse(donnees$ALCOOL >= 11, 1, 0)
+
+# régression avec codage imbriqué
+#print(summary(glm(donnees$RONFLE ~ niv1+niv2+niv3,family=binomial)))
+
+```
+
+```{r}
+#test 1 
+
+#creation de meta-niveau 
+
+#codage imbriqué pour indiquer une gradation
+
+# attention, codage 1, 2, 3 
+#niv1 <- ifelse(donnees$ALCOOL >= 1, 1, 0)
+#niv2 <- ifelse(donnees$ALCOOL >= 6, 1, 0)
+#niv3 <- ifelse(donnees$ALCOOL >= 11, 1, 0)
+
+# régression avec codage imbriqué
+#print(summary(glm(donnees$RONFLE ~ niv1+niv2+niv3,family=binomial)))
+
+```
+
+#### Evaluation des variables
+
+```{r logistic model adjustment, echo = FALSE, message=FALSE, warning=FALSE,fig.height=7}
+#'________________________
+#' 
+#' SELECTION DES VARIABLES
+#'________________________
+
+#selection des variables par p-value
+#selection des variables apres anova ?
+#selection des variables apres stepAIC() (MASS library) both forward backward
+```
+
+##### backward_model_AIC :
+
+```{r logistic model AIC modelisation, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+#'____________________
+#' 
+#' Variable selection “backward”  - AIC criterion ----
+#'____________________
+
+backward_model_AIC <- logistic_model_all %>%
+                  stepAIC(direction = "backward")
+#summary(backward_model_AIC)
+```
+
+```{r logistic model AIC prediction, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+pred2 <- predict(backward_model_AIC,newdata=test_data,type="response")
+```
+
+```{r logistic model AIC evaluation, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+error_rate(backward_model_AIC,test_data,test_data$DxCancer)
+backward_model_AIC$anova
+plot(0:(nrow(backward_model_AIC$anova)-1),backward_model_AIC$anova[,"AIC"],type="b",xlab="# de var. retirées",ylab="AIC",main="Sélection backward (AIC)")
+```
+
+**ROC curve for backward_model_AIC prediction:** 
+
+```{r logistic model AIC ROC , echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+# ROC curve
+pred <- ROCR::prediction(pred2,test_data$DxCancer)
+graphs_roc <- ROCR::performance(pred,measure="tpr",x.measure="fpr")
+ROCR::plot(graphs_roc,xlab="TFP",ylab="TFP",col="darkblue")
+abline(a=0,b=1)
+```
+
+##### backward_model_BIC : 
+
+```{r logistic model BIC modelisation, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+#'____________________
+#' 
+#' Variable selection “backward”  - BIC criterion ----
+#'____________________
+
+backward_model_BIC<-logistic_model_all %>%
+                  stepAIC(direction = "backward",k = log(nrow(train_data)))
+#summary(backward_model_BIC)
+```
+
+```{r logistic model BIC prediction, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+pred3 <- predict(backward_model_BIC,newdata=test_data,type="response")
+```
+
+```{r logistic model BIC evaluation, echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+error_rate(backward_model_BIC,test_data, test_data$DxCancer)
+backward_model_BIC$anova
+plot(0:(nrow(backward_model_BIC$anova)-1),backward_model_BIC$anova[,"AIC"],type="b",xlab="# de var. retirées",ylab="BIC",main="Sélection backward (BIC)")
+#selection par lasso
+```
+
+**ROC curve for backward_model_BIC prediction:** 
+
+```{r logistic model BIC ROC , echo = TRUE, message=FALSE, warning=FALSE,fig.height=7}
+# ROC curve
+pred <- ROCR::prediction(pred3,test_data$DxCancer)
+graphs_roc <- ROCR::performance(pred,measure="tpr",x.measure="fpr")
+ROCR::plot(graphs_roc,xlab="TFP",ylab="TFP",col="darkblue")
+abline(a=0,b=1)
+```
+
+ cet article : https://www.researchgate.net/publication/325129765_Supervised_deep_learning_embeddings_for_the_prediction_of_cervical_cancer_diagnosis
+
+
+
+
+
+

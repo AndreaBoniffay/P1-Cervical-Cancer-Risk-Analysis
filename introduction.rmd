@@ -1,0 +1,49 @@
+---
+output: html_document
+title : "Statistic Report"
+---
+
+Statistic Report 
+
+# About this work
+
+**Title** : Exploring Data Analysis of cervical cancer risk factor from the database: UCI Machine Learning Repository.   
+**Author** : A.Boniffay, Doctor of pharmacy and DataScientist.  
+**Date** : December 2024   
+
+Data references  
+
+> Fernandes,Kelwin, Cardoso,Jaime, and Fernandes,Jessica. (2017). Cervical Cancer (Risk Factors). UCI Machine Learning Repository. https://doi.org/10.24432/C5Z310.
+
+
+# Introduction
+
+## Contexte et objectifs  
+Le cancer du col de l'utérus est l'un des types de cancer les plus 
+courants chez les femmes, en particulier dans les pays en développement. 
+Le dépistage précoce et la compréhension des facteurs de risque sont 
+essentiels pour améliorer les résultats en matière de santé publique. 
+La base de données utilisée dans ce rapport, fournie par Fernandes et al. 
+(2017), contient des informations sur divers facteurs de risque potentiels 
+pour le cancer du col de l'utérus, notamment les antécédents médicaux, les 
+comportements de santé et les résultats des tests cliniques.  
+
+## Description des données  
+La base de données contient 858 observations et 36 variables, 
+dont 24 sont des variables qualitatives et 12 sont des variables quantitatives. Aucune colonne n'est vide. 
+Le nombre total d'observation manquante sur l'entièreté du dataset est de 3622 observations sur xx observations soit xx %. 59 patients ont 
+toutes leurs variables renseignées.   
+  
+la majorité des variables sont remplies à plus de 87%, 
+2 variables sont remplies à  86%, IUD (boolean qui indique la presence ou non d'un dispositif intrauterin chez la patiente) 
+et IUDYears (le nombre d'année que le dispositif à ete porté)
+2 variables ont un taux de remplissage de 8%, TimeSinceFirstSTDs (qui correspond au temps depuis le premier diagnostique d'IST) 
+et TimeSinceLastSTDs (qui correspond au temps depuis le dernier diagnostique d'IST)
+
+
+## Problématique  
+L'objectif de ce rapport est d'identifier et d'analyser les principaux 
+facteurs de risque associés au cancer du col de l'utérus à partir de la 
+base de données. Nous explorerons comment ces facteurs sont reliés entre
+eux et si certains d'entre eux peuvent prédire la survenue de résultats 
+anormaux lors des tests de dépistage.  

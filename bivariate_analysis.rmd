@@ -1,0 +1,299 @@
+
+# Bivariate Analysis
+
+## Quantitative VS Outcome
+
+Outcome = `DxCancer`
+
+### Vizualisation
+
+#### Boxplots by diagnosis
+
+```{r Quantitative VS Outcome plots ,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+
+quantitative <- colnames(data[colnames(data) %in% quantitative_variable_names])
+
+# independant scatterplots for each pairs of variables
+plot_list <- list()  # list to stock graph
+
+for (i in 1:(length(quantitative)-1)) {
+  
+  var_x <- Outcome  # Outcome
+  var_y <- quantitative[i]  # quantitative var
+
+  if (var_x != var_y) {
+    # boxplot creation
+    p <- ggplot(data, aes(x = .data[[var_x]], y = .data[[var_y]], fill = .data[[var_x]])) +
+      geom_boxplot() +
+      scale_fill_manual(values = c("TRUE" = "#83b9cb", "FALSE" = "#f49691")) +  # Colorer TRUE en bleu, FALSE en rouge
+      labs(title = paste("Boxplot of", var_y, "by", var_x)) +
+      theme_minimal() +
+      theme(plot.title = element_text(size = 10),
+            plot.margin = unit(c(1, 1, 3, 1), "lines"),
+            legend.position = "none")  
+
+    # add plot 
+    plot_list[[paste(var_y, var_x, sep = "_by_")]] <- p
+  }
+}
+
+# display graph 
+aes_columns_display(plot_list, 2)
+```
+
+
+
+#### Density plots by diagnosis
+
+```{r Quantitative VS Outcome density ,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+
+density_plot_list <- list()    # list to stock graph
+
+for (i in 1:length(quantitative)) {
+  
+    var_x <- quantitative[[i]] 
+    var_y <- Outcome  
+
+    if (!identical(var_x, var_y)) {  # var != outcome
+      
+        # graph
+        p <- ggplot(data, aes_string(x = var_x, fill = var_y, colour = var_y)) +
+                  geom_density(alpha = 0.25)+
+          geom_rug() +
+          labs(title = paste("Density plot of", var_x, "by Cancer diag"),
+               x = names(quantitative)[i],
+               fill = "Cancer diag",
+               colour = "Cancer diag")+
+      theme_minimal() + 
+      theme(plot.title = element_text(size = 10))
+        
+   density_plot_list[[paste(var_y, var_x, sep = "_by_")]] <- p
+    }
+    else {
+       
+    }
+  }
+
+
+# display graph 
+aes_columns_display(density_plot_list, 2)
+```
+
+### Statistics
+
+This statistical section will allow us to observe whether there is a 
+significant difference between patients diagnosed with cervical cancer and 
+undiagnosed patients according to the different quantitative variables in the study. 
+We begin by testing the normality of the variables to find out the appropriate statistical test to use. 
+
+#### hypothesis verification
+##### Normality test for continuous variables
+###### Shapiro
+```{r Shapiro test ,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+
+
+for (i in 1:length(continuous_variable_names)) {
+var <- continuous_variable_names[[i]]
+res <- shapiro.test(data[[var]])
+
+  cat("\nShapiro Test Result for", var, "distribution :\n")
+  print(res)
+  cat("\n")
+
+}
+
+```
+
+###### QQplot
+```{r qq visualisation ,echo = FALSE, message=FALSE, warning=FALSE, results='hide', fig.height = 4, fig.width=5}
+
+
+for (i in 1:length(continuous_variable_names)) {
+var <- continuous_variable_names[[i]]
+
+p<-qqnorm(data[[var]], main = NULL)
+  qqline(data[[var]])
+  title(main = paste(var))
+}
+
+```
+
+
+##### Variances test for continuous variables
+```{r variance levene Test,,echo = FALSE, message=FALSE, warning=FALSE, results='hide', fig.height = 4, fig.width=5}
+
+
+for (i in 1:length(continuous_variable_names)) {
+var <- continuous_variable_names[[i]]
+res <- leveneTest(data[[var]] ~ DxCancer, data = data)
+
+  cat("\nLevene Test Result for", var, "variance :\n")
+  print(res)
+  cat("\n")
+
+}
+```
+
+```{r variance fligner Test,,echo = FALSE, message=FALSE, warning=FALSE, results='hide', fig.height = 4, fig.width=5}
+
+
+for (i in 1:length(continuous_variable_names)) {
+var <- continuous_variable_names[[i]]
+res <- fligner.test(data[[var]] ~ DxCancer, data = data)
+
+  cat("\nFligner Test Result for", var, "variance :\n")
+  print(res)
+  cat("\n")
+
+}
+```
+
+None of the distributions is normal. The Wilcoxon test will be used.
+
+
+#### test choice
+
+The wilcoxon test will allow us to establish whether there is a significant difference between 
+patients diagnosed with cancer and those not diagnosed for the different quantitative variables in the study.
+
+```{r wilcoxon tests ,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 10}
+
+wilcox_list <- list()
+
+for (i in 1:length(continuous_variable_names)) {
+var <- continuous_variable_names[[i]]
+
+res <- wilcox.test(data[[var]]~data[[Outcome]],conf.int = TRUE)
+wilcox_list[[paste(var)]] <- res
+}
+
+wilcox_list
+```
+
+The statistical test assumes that there is a statistically significant difference between the groups for age, IUDYears (Years of IUD use) (p-value < 0.05)  
+
+#### Size effect :
+
+```{r cohen d , echo = FALSE, message=FALSE, warning=FALSE, fig.height = 10}
+
+for (i in 1:length(continuous_variable_names)) {
+  var <- continuous_variable_names[i]
+  
+  group_true <- data[[var]][data$DxCancer == "TRUE"]
+  group_false <- data[[var]][data$DxCancer == "FALSE"]
+  
+  # Cohen's d
+  res <- cohen.d(group_true, group_false)
+  
+  # display results
+  cat("\nCohen's d Result for", var, "by Cancer diagnosis is:\n")
+  print(res)
+  cat("\n")
+}
+
+```
+
+
+## Qualitative VS Outcome
+
+### Vizualisation and statistics
+
+The Pearson's Chi-squared test will allow us to establish whether there is a significant difference between 
+patients diagnosed with cancer and those not diagnosed for the different qualitative variables in the study.
+
+```{r Qualitative VS Outcome plots,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+
+qualitative <- colnames(data[colnames(data) %in% qualitative_variable_names])
+
+
+plot_list <- list()
+
+
+for (i in 1:length(qualitative)) {
+  
+    var_x <- qualitative[i]  
+    var_y <- Outcome        
+
+    if (var_x != var_y){
+
+      p <- ggplot(data, aes(x = .data[[var_x]], fill = factor(.data[[var_y]]))) +
+        geom_bar(position = "fill") +
+        scale_y_continuous(labels = scales::percent_format()) +  
+        labs(title = paste("Proportion of", var_y, "by", var_x), 
+             x = var_x, y = "Proportion", fill = var_y) +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 10),
+            plot.margin = unit(c(1, 1, 3, 1), "lines"))
+      
+
+      plot_list[[paste(var_x, var_y, sep = "_by_")]] <- p
+    }
+}
+
+```
+
+
+```{r Chi2 tests ,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+
+chi2_list <- list()
+
+for (i in 1:length(qualitative)) {
+  
+    var_x <- qualitative[i] 
+    var_y <- Outcome
+
+table_res <- table(data[[var_x]], data[[var_y]])
+res <- chisq.test(table_res)
+
+ chi2_list[[paste(var_x, var_y, sep = "_by_")]] <- res
+}
+
+```
+
+
+```{r Qualitative display ,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4, fig.width=5}
+
+for (i in 1:length(qualitative)) {
+
+  var_x <- qualitative[i]  
+  var_y <- Outcome
+
+  if (var_x != var_y){
+
+  p <- plot_list[[paste(var_x, var_y, sep = "_by_")]]
+  print(p)
+  
+
+  res <- chi2_list[[paste(var_x, var_y, sep = "_by_")]]
+  cat("\nChi-Square Test Result for", var_x, "and", var_y, "association :\n")
+  print(res)
+  cat("\n")
+  cat("\n------------- Effect size : ------------\n")
+  cat("\nCramer V Test Result for", var_x, "and", var_y, "association :\n")
+  cramerV(res$observed,ci = TRUE)
+  print(cramerV(res$observed,ci = TRUE))
+
+
+}
+}
+```
+
+
+
+
+The statistical test assumes that there is a statistically significant difference between the groups for IUD (IUD use), DxHPV, Dx, Hinselmann, Schiller, Cytology, Biopsy (p-value < 0.05)  
+
+#### Odd Ratios :
+
+**Table 7 : Odds Ratios**
+
+```{r Odds Ratios univariate ,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 10}
+
+library(finalfit)
+res_glm_uni <- data%>%
+    glmuni("DxCancer", qualitative[-15]) %>% 
+    fit2df(estimate_suffix=" (univarié)")
+
+kable(res_glm_uni,row.names=FALSE, align=c("l", "l", "r", "r", "r", "r"))
+
+```

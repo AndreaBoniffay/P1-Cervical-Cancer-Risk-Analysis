@@ -1,0 +1,116 @@
+# Multivariate Analysis
+
+### Clustering
+
+**Figure : Optimal number of cluster for ACP results**
+
+```{r Kmean ACP Clustering, echo = FALSE, message=FALSE, warning=FALSE, fig.height=3}
+#'______________________________________________
+#'
+#'  CLUSTER ON ACP RESULTS
+#'______________________________________________
+
+# optimal number of cluster for ACP results
+
+# par(mfrow = c(2, 3)) ne prend pas en compte fviz_nbclust
+# Elbow method
+plot_clust_ACP1<-fviz_nbclust(normalised_data[colnames(normalised_data) %in% quantitative_variable_names], kmeans, method = "wss") + geom_vline(xintercept = 4, linetype = 2)+
+labs(subtitle = "Elbow method",title = "") 
+
+# Silhouette method
+plot_clust_ACP2<-fviz_nbclust(normalised_data[colnames(normalised_data) %in% quantitative_variable_names], kmeans, method = "silhouette")+
+labs(subtitle = "Silhouette method",title = "") 
+
+#Gap statistic method
+plot_clust_ACP3<-fviz_nbclust(normalised_data[colnames(normalised_data) %in% quantitative_variable_names], kmeans, nstart = 25, method = "gap_stat", nboot = 50)+
+labs(subtitle = "Gap statistic method",title = "") 
+
+grid.arrange(plot_clust_ACP1, plot_clust_ACP2, plot_clust_ACP3, ncol = 3)
+```
+
+**Figure : Cluster from ACP results**
+
+```{r plot ACP Clustering, echo = FALSE, message=FALSE, warning=FALSE,fig.height=7}
+
+# graph kmean on ACP results 
+res_kmean_acp<-kmeans(normalised_data[colnames(normalised_data) %in% quantitative_variable_names],centers=2,nstart =20) 
+fviz_cluster(res_kmean_acp,normalised_data[colnames(normalised_data) %in% quantitative_variable_names],  ellipse.type = "norm") 
+
+```
+
+**Figure : Optimal number of cluster for ACM results**
+
+```{r Kmean ACM Clustering, echo = FALSE, message=FALSE, warning=FALSE, fig.height=3}
+
+#'______________________________________________
+#'
+#'  CLUSTER ON ACM RESULTS
+#'______________________________________________
+
+# Dim 1 and 2 MCA results isolation
+res_MCA_D12<- as.data.frame(res_MCA$ind$coord)
+res_MCA_D12<-res_MCA_D12 %>% select (c("Dim 1","Dim 2"))
+
+# optimal number of cluster for ACM results
+
+# Elbow method
+plot_clust_ACM1<-fviz_nbclust(res_MCA_D12, kmeans, method = "wss") + geom_vline(xintercept = 4, linetype = 2)+
+labs(subtitle = "Elbow method",title = "") 
+
+# Silhouette method
+plot_clust_ACM2<-fviz_nbclust(res_MCA_D12, kmeans, method = "silhouette")+
+labs(subtitle = "Silhouette method",title = "") 
+
+#Gap statistic method
+plot_clust_ACM3<-fviz_nbclust(res_MCA_D12, kmeans, nstart = 25, method = "gap_stat", nboot = 50)+
+labs(subtitle = "Gap statistic method",title = "") 
+
+grid.arrange(plot_clust_ACM1, plot_clust_ACM2, plot_clust_ACM3, ncol = 3)
+```
+
+**Figure : Cluster from ACM results**
+
+```{r plot ACM Clustering, echo = FALSE, message=FALSE, warning=FALSE,fig.height=7}
+# graph kmean on ACM results 
+res_kmean_acm <- kmeans(res_MCA_D12, centers = 2, nstart = 25)
+fviz_cluster(res_kmean_acm, res_MCA_D12, ellipse.type = "norm")
+
+```
+
+**Figure : Optimal number of cluster for FAMD results**
+
+```{r Kmean FADM Clustering, echo = FALSE, message=FALSE, warning=FALSE, fig.height=3}
+
+#'______________________________________________
+#'
+#'  CLUSTER ON FAMD RESULTS
+#'______________________________________________
+
+# Dim 1 and 2 MCA results isolation
+res_FAMD_D12<- as.data.frame(res.FAMD$ind$coord)
+res_FAMD_D12<-res_FAMD_D12 %>% select (c("Dim.1","Dim.2"))
+
+# optimal number of cluster for ACM results
+
+# Elbow method
+plot_clust_FADM1<-fviz_nbclust(res_FAMD_D12, kmeans, method = "wss") + geom_vline(xintercept = 4, linetype = 2)+
+labs(subtitle = "Elbow method",title = "") 
+
+# Silhouette method
+plot_clust_FADM2<-fviz_nbclust(res_FAMD_D12, kmeans, method = "silhouette")+
+labs(subtitle = "Silhouette method",title = "")
+
+#Gap statistic method
+plot_clust_FADM3<-fviz_nbclust(res_FAMD_D12, kmeans, nstart = 25, method = "gap_stat", nboot = 50)+
+labs(subtitle = "Gap statistic method",title = "")
+
+grid.arrange(plot_clust_FADM1, plot_clust_FADM2, plot_clust_FADM3, ncol = 3)
+```
+
+**Figure : Cluster from FAMD results**
+
+```{r plot FADM Clustering, echo = FALSE, message=FALSE, warning=FALSE,fig.height=7}
+# graph kmean on FAMD results 
+res_kmean_FAMD <- kmeans(res_FAMD_D12, centers = 2, nstart = 25)
+fviz_cluster(res_kmean_FAMD, res_FAMD_D12, ellipse.type = "norm")
+```

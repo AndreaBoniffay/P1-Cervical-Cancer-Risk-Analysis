@@ -1,0 +1,825 @@
+
+
+```{r formatting data, echo = FALSE, message=FALSE, warning=FALSE}
+#'________________________________________________
+#'
+#' DATA ----
+#'________________________________________________
+
+data = data_original
+
+### Set appropiate colnames
+column_names     <- readLines(path_to_Feature_set)
+colnames(data)   <- column_names
+
+### Set variable informations 
+col_informations <- readLines(path_to_Feature_informations)
+
+### Set type of varibales 
+data[,quantitative_variable_names] <- lapply(data[, quantitative_variable_names], as.numeric)
+
+data[, bool_variable_list_names] <- lapply(data[, bool_variable_list_names], function(x) {
+  ifelse(x == "1.0", 1, ifelse(x == "0.0", 0, x))
+})
+data[,bool_variable_list_names] <- lapply(data[, bool_variable_list_names], as.numeric)
+data[,bool_variable_list_names] <- lapply(data[, bool_variable_list_names], as.logical)
+```
+
+```{r check point variable class preprocessing, echo = FALSE, message=FALSE, warning=FALSE}
+#'________________________________________________
+#'
+#' CHECK POINT ----
+#'________________________________________________
+
+sapply(data[,c(bool_variable_list_names,quantitative_variable_names)], class)
+
+```
+
+# Preprocessing
+
+
+## Global overview of the initial datset
+
+```{r Get global data summaries, echo = FALSE, message=FALSE, warning=FALSE}
+
+#' plot_list list (plot list you want display in your report)
+#' nb_columns numeric (nomber of columns you want for your display)
+
+aes_columns_display <- function(plot_list, nb_columns) {
+  for (cindex in seq(nb_columns, length(plot_list), by = nb_columns)) {
+    start_index <- (cindex - nb_columns) + 1
+    end_index <- cindex
+    do.call("grid.arrange", c(plot_list[start_index:end_index], ncol = nb_columns))
+  }
+  
+  # Afficher les graphiques restants (s'il y en a)
+  if (length(plot_list) %% nb_columns != 0) {
+    start_index <- (floor(length(plot_list) / nb_columns) * nb_columns) + 1
+    do.call("grid.arrange", c(plot_list[start_index:length(plot_list)], ncol = nb_columns))
+  }
+}
+
+get_dataset_summary <- function(data) {
+  rows <- nrow(data)
+  columns <- ncol(data)
+  qualitative_columns <- sum(sapply(data, function(col) is.factor(col) || is.character(col) || is.logical(col)))
+  quantitative_columns <- sum(sapply(data, is.numeric))
+  all_missing_columns <- sum(colSums(is.na(data)) == nrow(data))
+  missing_observations <- sum(is.na(data))
+  complete_rows <- sum(complete.cases(data))
+  total_observations <- nrow(data) * ncol(data)
+  memory_allocation <- round(object.size(data) / 1024, digits = 1)
+
+  # Création du tableau récapitulatif
+  summary_table <- tibble::tibble(
+    Name = c("Rows", "Columns", "Qualitative columns", "Quantitative columns", "All missing columns", "Missing observations", "Complete Rows", "Total observations", "Memory allocation (Kb)"),
+    Value = c(rows, columns, qualitative_columns, quantitative_columns, all_missing_columns, missing_observations, complete_rows, total_observations, memory_allocation)
+  )
+  
+  return(summary_table)
+}
+
+
+
+
+get_detailed_summary <- function(data, description) {
+  summary_table <- data.frame(
+    Label = colnames(data),
+    Variable_Class = sapply(data, class),
+    Unique_Values = sapply(data, function(col) length(unique(na.omit(col)))),
+    Missing = sapply(data, function(col) sum(is.na(col))) / nrow(data) * 100,
+    stringsAsFactors = FALSE
+  )
+  
+  summary_table$Description <- description
+  summary_table$Missing <- paste0(round(summary_table$Missing, 2), " %")
+  rownames(summary_table) <- NULL
+  
+  return(summary_table)
+}
+
+
+# Nb Rows/Columns/Qualitative & Quantitative columns/All missing columns/Missing observations/Complete Rows/Total observations/Memory allocation (Kb)
+dataset_summary<-get_dataset_summary(data)
+# Labels/Variable class/Unique values/Missing/Description
+variable_summary<-get_detailed_summary(data,col_informations)
+
+# Table aesthetic
+dataset_summary_kable<-statReportPackage::aes_table_paper_format(dataset_summary)
+variable_summary_kable<-statReportPackage::aes_table_paper_format(variable_summary)
+
+```
+
+The dataset has 858 rows (observations) and 36 columns (variables), of which 
+24 are qualitative (categorical) and 12 are quantitative (numerical). The 
+dataset doesn't contain any completely empty columns. There are 3,622 missing 
+observations across the dataset, and only 59 complete rows with no missing data. 
+The dataset consists of a total of 30,888 individual observations (858 rows x 36 columns),
+ and the memory allocation for this dataset is 183.9 Kb.
+
+**Table 1 : Initial dataset summary**
+`r dataset_summary_kable`  
+  
+## Global overview of initial variables
+
+**Table 2 : Initial variable summary**
+`r variable_summary_kable`
+
+```{r set id columns, echo = FALSE, message=FALSE, warning=FALSE}
+
+#' ==========================================================
+#' ID creation if doesn't exist
+data <- statReportPackage::set_id_column(data)
+
+### Set colnames and col_informations files with ID settings
+#' new_colnames <- c("ID", readLines(path_to_Feature_set))
+#' writeLines(new_colnames, path_to_Feature_set)
+#' new_col_info <- c("ID (subject id)", readLines(path_to_Feature_informations))
+#' writeLines(new_col_info, path_to_Feature_informations)
+
+#'==============================================================
+
+```
+
+## NA Distribution 
+
+The majority of variables are less than 13% of missing values, except for two variables.  
+
+**Figure 1 : Missing values distribution**
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE, fig.height=5}
+#'______________________________________________________________________________
+#' NA COLUMNS ----
+#'______________________________________________________________________________
+
+
+
+plot_na_percentage_sorted <- function(data) {
+  # Calcul du pourcentage de NA pour chaque variable
+  na_percentage <- sapply(data, function(col) sum(is.na(col)) / length(col) * 100)
+  
+  # Créer un data frame pour ggplot
+  na_data <- data.frame(
+    Variable = names(na_percentage),
+    NA_Percentage = na_percentage
+  )
+  
+  # Trier les variables par pourcentage de NA (du plus grand au plus petit)
+  na_data <- na_data[order(na_data$NA_Percentage, decreasing = TRUE), ]
+  
+  # Créer l'histogramme avec ggplot2
+  ggplot(na_data, aes(x = reorder(Variable, -NA_Percentage), y = NA_Percentage)) +
+    geom_bar(stat = "identity", fill = "#FF6F61", color = "black") +  # Histogramme avec barres remplies
+    labs(x = "Variables", y = "NA percentage", title = "") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1,size = 11))  # Rotation des étiquettes des variables pour lisibilité
+}
+
+
+plot_na_percentage_sorted(data)
+
+
+
+### Get NA informations in table
+NA_summary <- data.frame(
+    Label = colnames(data),
+    Missing = sapply(data, function(col) sum(is.na(col))) / nrow(data) * 100,
+    Completed = sapply(data, function(col) 1-(sum(is.na(col))) / nrow(data)) * 100,
+    stringsAsFactors = FALSE
+  )
+
+#NA table aesthetic
+NA_summary$Missing <- paste0(round(NA_summary$Missing, 2), " %")
+  NA_summary$Completed <- paste0(round(NA_summary$Completed, 2), " %")
+  rownames(NA_summary) <- NULL
+  NA_summary<-NA_summary %>%
+  arrange(Missing)
+
+NA_summary<-statReportPackage::aes_table_paper_format(NA_summary)
+
+### Remove columns with only NA values 
+data <- data %>% dplyr::select(-c("TimeSinceFirstSTDs","TimeSinceLastSTDs"))
+
+```
+
+
+
+
+
+Two variables  **TimeSinceFirstSTDs** (corresponding to the time since the first STI diagnosis) 
+and **TimeSinceLastSTDs** (corresponding to time since last STI diagnosis) have a rate of 91% of missing value.
+
+**Table 3 : Missing value proportion**
+`r NA_summary`  
+
+**TimeSinceFirstSTDs** and **TimeSinceLastSTDs** variables don't bring suffisant information.  
+> Madley-Dowd et al. https://www.sciencedirect.com/science/article/pii/S0895435618308710  
+These variables are **deleted**.  
+Dataset columns is reduced from 36 to `r ncol(data %>% dplyr::select(-ID))`.  
+
+
+## Unique value 
+
+Two columns have one single value **STDsCervicalCondylomatosis** and **STDsAIDS**. 
+
+Only fasle category for the two variables.  
+
+**Figure 2 : Unique value histogram**
+```{r Exclusions, echo = FALSE, message=FALSE, warning=FALSE, fig.height=4}
+#'______________________________________________________________________________
+#' UNIQUE VALUES ----
+#'______________________________________________________________________________
+### Get variables with unique value
+result <- map(data, function(column) {
+  length(unique(na.omit(column))) == 1
+})
+
+unique_value_columns <- names(result)[map_lgl(result, isTRUE)] #columns names
+
+#Get unique value plot for visual confirmation
+unique_plot <- list()
+
+for(i in 1:length(unique_value_columns)){
+p <- ggplot(data, aes_string(x = unique_value_columns[i])) +
+      geom_bar() 
+
+unique_plot[[i]] <- p
+}
+
+aes_columns_display(unique_plot,2)
+### Patient with unique value ----
+```
+
+They don't bring any additional information to the analysis and are therefore suppressed.
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE, fig.width = 13, fig.height = 13}
+### Remove columns with unique value 
+data <- data %>% dplyr::select(-"STDsCervicalCondylomatosis",-"STDsAIDS")
+```
+
+The dataframe now includes `r ncol(data %>% dplyr::select(-ID))` variables.
+
+
+## Duplications
+
+This part of this work determine if there are any redundant variables or duplicated patient 
+in the dataframe.  
+
+```{r Duplication, echo = FALSE, message=FALSE, warning=FALSE}
+#'______________________________________________________________________________
+#' DUPLICATION ----
+#'______________________________________________________________________________
+#### Duplication (variables duplication) 
+duplicated_columns<-statReportPackage::get_duplicated_columns(data)
+
+#### Duplication (patients duplication) 
+duplicated_lines<-statReportPackage::get_duplicated_lines(data %>% dplyr::select(-ID))
+```
+
+### Patient duplication  
+Identical results are observed for different groups of patients. 
+There are `r length(duplicated_lines$duplicated_groups)` duplicated lines groups.   
+Indices :  
+
+```{r get duplication indices, echo = FALSE, message=FALSE, warning=FALSE}
+#'
+#### Get duplication indices (patients duplication) 
+for (i in 1:length(duplicated_lines$duplicated_groups)){
+print(duplicated_lines$duplicated_groups[[i]])
+}
+
+```
+
+**The Data Pharmacist intervention🎯** : The limited number of variables and their quality, compared with the number of patients, 
+complicates the prevention of random duplication. No patient is removed.
+
+### Variable duplication  
+
+No variables are duplicated  
+
+## Aberant value 
+
+**Figure 3: Outliers identification**
+```{r Data correction, echo = FALSE, message=FALSE, warning=FALSE}
+#'______________________________________________________________________________
+#' DATA CORRECTIONS ----
+#' ______________________________________________________________________________
+
+### Identification of aberrant values
+par(mar=c(10, 4, 4, 2) + 0.1) 
+boxplot(data[colnames(data) %in% quantitative_variable_names], main="Aberant values identification", col="lightblue", xaxt="n")
+text(x = 1:length(data[colnames(data) %in% quantitative_variable_names]), 
+     y = -4,   # Diminue cette valeur pour descendre les labels plus bas
+     srt = 45, adj = 1, 
+     labels = names(data[colnames(data) %in% quantitative_variable_names]), 
+     xpd = TRUE)
+```
+
+
+**Doc expertise 🎯⚕** :  
+  
+After analysis, it is important to note that all 
+observations are clinically plausible. There are no obvious 
+anomalies or outliers that might reflect data entry error or measurement bias. 
+Behavioral and medical history variables (such as number of pregnancies, 
+years of smoking or years on hormonal contraceptives) are consistent with 
+what it would be observed in the real population.
+
+There is no medical justification for excluding observations, as none of 
+the values are outside the ranges reasonably expected for the population studied.  
+  
+**Data scientist 💻📈** :  
+  
+However, it is essential to take a cautious 
+approach to analysis, particularly when it comes to extreme values. 
+These values, while legitimate from a medical point of view, can have 
+a disproportionate impact on certain classic statistical measures, such 
+as the mean. These extreme observations can bias the results and give a 
+misleading picture of the overall trend.  
+
+Preferred study markers: median, quartiles and interquartile ranges  
+Recommended data transformation (normalization, stadardization, etc.)
+
+
+**Table 4 : Original patients characteristics**  
+
+```{r Original patients characteristics table, echo = FALSE, message=FALSE, warning=FALSE}
+
+data_characteristics <- data
+data_characteristics <- data_characteristics %>%
+  mutate(
+    SmokesYears = case_when(
+      SmokesYears >= 0 & SmokesYears < 1 ~ "0 to 1",
+      SmokesYears >= 1 & SmokesYears <= 5 ~ "1 to 5",
+      SmokesYears > 5 & SmokesYears <= 10 ~ "5 to 10",
+      SmokesYears > 10 ~ "10<"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    HormonalContraceptivesYears = case_when(
+      HormonalContraceptivesYears == 0 ~ "0",
+      HormonalContraceptivesYears > 0 & HormonalContraceptivesYears <= 5 ~ "0 to 5",
+      HormonalContraceptivesYears > 5 & HormonalContraceptivesYears <= 10 ~ "5 to 10",
+      HormonalContraceptivesYears > 10 ~ "10<"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    IUDYears = case_when(
+      IUDYears == 0 ~ "0",
+      IUDYears > 0 & IUDYears <= 5 ~ "0 to 5",
+      IUDYears > 5 & IUDYears <= 10 ~ "5 to 10",
+      IUDYears > 10 ~ "10<"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    NumberOfSexualPartners = case_when(
+      NumberOfSexualPartners == 0 ~ "0",
+      NumberOfSexualPartners >= 1 & NumberOfSexualPartners <= 5 ~ "1 to 5",
+      NumberOfSexualPartners > 5  ~ "5 <"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    FirstSexualIntercourse = case_when(
+      FirstSexualIntercourse < 14 ~ "<14",
+      FirstSexualIntercourse >= 14 & FirstSexualIntercourse < 18 ~ "14 to 18",
+      FirstSexualIntercourse >= 18 & FirstSexualIntercourse < 22 ~ "18 to 22",
+      FirstSexualIntercourse >= 22 & FirstSexualIntercourse < 26 ~ "22 to 26",
+      FirstSexualIntercourse >=26 ~ "26<"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    NumOfPregnancies = case_when(
+      NumOfPregnancies == 0 ~ "0",
+      NumOfPregnancies >= 1 & NumOfPregnancies <= 5 ~ "1 to 5",
+      NumOfPregnancies > 5 ~ "5 <"
+    )
+  )
+
+
+patients_characteristics <-
+  tbl_summary(
+    data_characteristics,
+    include = c(Age, SmokesYears,HormonalContraceptivesYears, IUDYears, NumberOfSexualPartners,NumOfPregnancies),
+    missing = "ifany" # don't list missing data separately
+  ) |> 
+  modify_header(label = "**Variable**") |> # update the column header
+  bold_labels() |>
+  as_gt() |> 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police
+    ),
+    locations = list(
+      gt::cells_body(),              # Corps du tableau
+      gt::cells_column_labels(),  # En-têtes de colonnes
+      gt::cells_title()        
+    )
+  )
+```
+
+
+`r patients_characteristics`
+
+## Imputation
+
+Each variables contain less than 13.64% missing data, so we perform multiple 
+imputation by chain equation (MICE). The imputation is performed with the MICE 
+package of the R software.  
+
+m = 5, seed=10, maxit = 5  
+```{r Imputation, echo = FALSE, message = FALSE, warning = FALSE}
+# ______________________________________________________________________________
+# MISSING VALUE MANAGMENT 2h
+# ______________________________________________________________________________
+
+#/!\ mice() doesn't keep logocal information, need to recode after imputation
+imputed_data <- mice(data, m = 5, seed=10, print = FALSE, maxit = 5,method = c("", "", "pmm", "pmm", "pmm", "logreg", "pmm", "pmm", "logreg", "pmm", "logreg", "pmm", "logreg", "pmm", "logreg", "logreg", "logreg", "logreg", "logreg", "logreg", "logreg", "logreg", "logreg", "logreg", "pmm", "logreg", "logreg", "logreg", "logreg", "logreg", "logreg", "logreg", "logreg"))
+complete_data <- complete(imputed_data)
+
+complete_data = read.csv("complete_data.csv")
+```
+
+```{r check point variable class post imputation, echo = FALSE, message = FALSE, warning = FALSE}
+#'________________________________________________
+#'
+#' CHECK POINT ----
+#'________________________________________________
+
+# select boolean columns and quantitatives 
+bool_imputed_columns <- colnames(complete_data)[colnames(complete_data) %in% bool_variable_list_names]
+quant_imputed_columns <- colnames(complete_data)[colnames(complete_data) %in% quantitative_variable_names]
+
+# Combine
+selected_columns <- c(bool_imputed_columns, quant_imputed_columns)
+
+# columns types verification
+#sapply(complete_data[, selected_columns], class)
+
+complete_data[,quant_imputed_columns] <- lapply(complete_data[,quant_imputed_columns], as.numeric)
+complete_data[,bool_imputed_columns] <- lapply(complete_data[,bool_imputed_columns], as.logical)
+
+```
+
+
+**Table 4 : imputed patients characteristics**  
+
+```{r imputed patients characteristics table, echo = FALSE, message=FALSE, warning=FALSE}
+
+data_characteristics <- complete_data
+data_characteristics <- data_characteristics %>%
+  mutate(
+    SmokesYears = case_when(
+      SmokesYears >= 0 & SmokesYears < 1 ~ "0 to 1",
+      SmokesYears >= 1 & SmokesYears <= 5 ~ "1 to 5",
+      SmokesYears > 5 & SmokesYears <= 10 ~ "5 to 10",
+      SmokesYears > 10 ~ "10<"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    HormonalContraceptivesYears = case_when(
+      HormonalContraceptivesYears == 0 ~ "0",
+      HormonalContraceptivesYears > 0 & HormonalContraceptivesYears <= 5 ~ "0 to 5",
+      HormonalContraceptivesYears > 5 & HormonalContraceptivesYears <= 10 ~ "5 to 10",
+      HormonalContraceptivesYears > 10 ~ "10<"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    IUDYears = case_when(
+      IUDYears == 0 ~ "0",
+      IUDYears > 0 & IUDYears <= 5 ~ "0 to 5",
+      IUDYears > 5 & IUDYears <= 10 ~ "5 to 10",
+      IUDYears > 10 ~ "10<"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    NumberOfSexualPartners = case_when(
+      NumberOfSexualPartners == 0 ~ "0",
+      NumberOfSexualPartners >= 1 & NumberOfSexualPartners <= 5 ~ "1 to 5",
+      NumberOfSexualPartners > 5  ~ "5 <"
+    )
+  )
+
+data_characteristics <- data_characteristics %>%
+  mutate(
+    FirstSexualIntercourse = case_when(
+      FirstSexualIntercourse < 14 ~ "<14",
+      FirstSexualIntercourse >= 14 & FirstSexualIntercourse < 18 ~ "14 to 18",
+      FirstSexualIntercourse >= 18 & FirstSexualIntercourse < 22 ~ "18 to 22",
+      FirstSexualIntercourse >= 22 & FirstSexualIntercourse < 26 ~ "22 to 26",
+      FirstSexualIntercourse >=26 ~ "26<"
+    )
+  )
+
+
+
+patients_characteristics <-
+  tbl_summary(
+    data_characteristics,
+    include = c(Age,NumOfPregnancies,STDsNumber, DxHPV, SmokesYears, HormonalContraceptivesYears, IUDYears, NumberOfSexualPartners),
+    statistic = list(
+      all_continuous() ~ "{mean} ({min} - {max}), {median} ({p25} - {p75})"
+    ),
+    missing = "ifany" # don't list missing data separately
+  ) |> 
+  modify_header(label = "**Variable**") |> # update the column header
+  bold_labels() |>
+  as_gt() |> 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police
+    ),
+    locations = list(
+      gt::cells_body(),              # Corps du tableau
+      gt::cells_column_labels(),  # En-têtes de colonnes
+      gt::cells_title()        
+    )
+  )
+```
+
+
+`r patients_characteristics`
+
+### Global overview of variable imputations
+
+**Figure 4: Imputation visualisation**
+```{r imputation visualisation, echo = FALSE, message=FALSE, warning=FALSE}
+
+#visual verification
+
+#stripplot(imputed_data, pch = 20, cex = 1.2,layout = c(3, 3))
+
+```
+
+
+```{r imputation verification, echo = FALSE, message=FALSE, warning=FALSE}
+
+#check point post imputation (verification de concordance des données)
+#exemple le nombre d'année de fumeur avec un consommation de 0 paquet par an
+
+```
+
+
+
+### Difference test
+
+We use a t.test to see if there is a difference between the original variable means and the imputed variable means.
+
+```{r Detail missing values managment, echo = FALSE, message=FALSE, warning=FALSE}
+
+
+for (i in 1:length(quant_imputed_columns)) {
+  par(mfrow = c(2, 2))
+
+  # select colummn xith na in 'data'
+  column_name <- quant_imputed_columns[i]
+  column_with_NA <- data[[column_name]]
+
+  # select the same column in 'complete_data'
+  column_compl <- complete_data[[column_name]]
+
+  # Boîte à moustaches with na
+  boxplot(column_with_NA, col = "#83b9cb", probability = TRUE, xlab = column_name, main = "Data with NA")
+  
+  # Boîte à moustaches on complete data
+  boxplot(column_compl, density = 2, probability = TRUE, col = "#f49691", xlab = column_name, main = "Complete data")
+  
+  # curves
+  plot(density(column_with_NA, na.rm = TRUE), main = "Density plot", xlab = column_name, col = "#0d7cb0", lwd = 3)
+  lines(density(column_compl, na.rm = TRUE), col = "#ff544b", lty = 3, lwd = 2)
+
+  # t test (Student) 
+  cat("\nT.Test Result for the mean difference between original", column_name, "and imputed", column_name, " :\n")
+  print(t.test(column_with_NA, column_compl))
+}
+
+
+```
+
+
+> White, I. R., P. Royston, and A. M. Wood. 2011. “Multiple Imputation Using Chained 
+Equations: Issues and Guidance for Practice.” Statistics in Medicine 30 (4): 377–99.
+
+Original HormonalContraceptivesYears variable mean and the imputed HormonalContraceptivesYears 
+variable mean are significantly different. ame for the STDsNumber
+
+```{r before/after comparaison, echo = FALSE, message=FALSE, warning=FALSE}
+
+#get temporary file with imputation column
+.data<-data
+.complete_data<-complete_data
+#set imputation column to compare next
+.data$imputation <- 0
+.complete_data$imputation <- 1
+tot <- rbind(.data, .complete_data)
+
+before_imputation_table <-
+  tbl_summary(
+    data,
+    include = c(Age, SmokesYears,HormonalContraceptivesYears, IUDYears, NumberOfSexualPartners,FirstSexualIntercourse,NumOfPregnancies,STDsNumberOfDiagnosis),
+    by = DxCancer, # split table by group
+    statistic = list(
+      all_continuous() ~ "{mean} ({min} - {max}), {median} ({p25} - {p75})"
+    ),
+    missing = "ifany" # don't list missing data separately
+  ) |> 
+  add_p() |> # test for a difference between groups
+  modify_header(label = "**Variable**") |> # update the column header
+  modify_header(c(stat_1, stat_2) ~ "**DxCancer**_{level}_ (n={n})") |>
+  bold_labels()
+
+after_imputation_table <-
+  tbl_summary(
+    complete_data,
+    include = c(Age, SmokesYears,HormonalContraceptivesYears, IUDYears, NumberOfSexualPartners,FirstSexualIntercourse,NumOfPregnancies,STDsNumberOfDiagnosis),
+    by = DxCancer, # split table by group
+    statistic = list(
+      all_continuous() ~ "{mean} ({min} - {max}), {median} ({p25} - {p75})"
+    ),
+    missing = "ifany" # don't list missing data separately
+  ) |> 
+  add_p() |> # test for a difference between groups
+  modify_header(label = "**Variable**") |> # update the column header
+  modify_header(c(stat_1, stat_2) ~ "**DxCancer**_{level}_ (n={n})") |>
+  bold_labels()
+
+sum_char_with_without_imp <- 
+  tbl_merge(
+    tbls = list(before_imputation_table, after_imputation_table),
+    tab_spanner = c("**Before Imputation**", "**After Imputation**")
+  ) |>
+  as_gt() |> 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police
+    ),
+    locations = list(
+      gt::cells_body(),              # Corps du tableau
+      gt::cells_column_labels(),  # En-têtes de colonnes
+      gt::cells_title()        
+    )
+  )
+
+comp_with_without_imp <- 
+  tbl_summary(
+    tot,
+    include = c(Age, SmokesYears, SmokesPacksPerYear, HormonalContraceptivesYears, IUDYears, NumberOfSexualPartners, FirstSexualIntercourse, NumOfPregnancies, STDsNumberOfDiagnosis),
+    by = imputation, # split table by group
+    statistic = list(
+      all_continuous() ~ "{mean} ({min} - {max}), {median} ({p25} - {p75})"
+    ),
+    missing = "ifany" # include missing data in summary
+  ) |> 
+  add_p() |> # add p-values for group comparisons
+  modify_header(
+    list(
+      label ~ "**Variable**",
+      stat_1 ~ "**Before Imputation**(n={n})",
+      stat_2 ~ "**After Imputation**(n={n})") # update the column header
+  )|>
+  bold_labels()|> # bold variable labels
+  as_gt() |>  # Convertir le tableau en objet gt
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police (ajustez la valeur en px)
+    ),
+    locations = gt::cells_body()  # Appliquer le style à toutes les cellules du tableau
+  )
+
+
+after_imputation_table <-
+  tbl_summary(
+    complete_data,
+    include = c(Age, SmokesYears,HormonalContraceptivesYears, IUDYears, NumberOfSexualPartners,FirstSexualIntercourse,NumOfPregnancies,STDsNumberOfDiagnosis),
+    by = DxCancer, # split table by group
+    statistic = list(
+      all_continuous() ~ "{mean} ({min} - {max}), {median} ({p25} - {p75})"
+    ),
+    missing = "ifany" # don't list missing data separately
+  ) |> 
+  add_p() |> # test for a difference between groups
+  modify_header(label = "**Variable**") |> # update the column header
+  modify_header(c(stat_1, stat_2) ~ "**DxCancer**_{level}_ (n={n})") |>
+  bold_labels() |>
+  as_gt() |> 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police
+    ),
+    locations = list(
+      gt::cells_body(),              # Corps du tableau
+      gt::cells_column_labels(),  # En-têtes de colonnes
+      gt::cells_title()        
+    )
+  )
+
+after_imputation_table <-
+  tbl_summary(
+    complete_data,
+    include = c(Age, SmokesYears,HormonalContraceptivesYears, IUDYears, NumberOfSexualPartners,FirstSexualIntercourse,NumOfPregnancies,STDsNumberOfDiagnosis),
+    by = DxCancer, # split table by group
+    statistic = list(
+      all_continuous() ~ "{mean} ({min} - {max}), {median} ({p25} - {p75})"
+    ),
+    missing = "ifany" # don't list missing data separately
+  ) |> 
+  add_p() |> # test for a difference between groups
+  modify_header(label = "**Variable**") |> # update the column header
+  modify_header(c(stat_1, stat_2) ~ "**DxCancer**_{level}_ (n={n})") |>
+  bold_labels() |>
+  as_gt() |> 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police
+    ),
+    locations = list(
+      gt::cells_body(),              # Corps du tableau
+      gt::cells_column_labels(),  # En-têtes de colonnes
+      gt::cells_title()        
+    )
+  )
+
+after_imputation_table <-
+  tbl_summary(
+    complete_data,
+    include = c(Age, SmokesYears,HormonalContraceptivesYears, IUDYears, NumberOfSexualPartners,FirstSexualIntercourse,NumOfPregnancies,STDsNumberOfDiagnosis),
+    by = DxCancer, # split table by group
+    statistic = list(
+      all_continuous() ~ "{mean} ({min} - {max}), {median} ({p25} - {p75})"
+    ),
+    missing = "ifany" # don't list missing data separately
+  ) |> 
+  add_p() |> # test for a difference between groups
+  modify_header(label = "**Variable**") |> # update the column header
+  modify_header(c(stat_1, stat_2) ~ "**DxCancer**_{level}_ (n={n})") |>
+  bold_labels() |>
+  as_gt() |> 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police
+    ),
+    locations = list(
+      gt::cells_body(),              # Corps du tableau
+      gt::cells_column_labels(),  # En-têtes de colonnes
+      gt::cells_title()        
+    )
+  )
+
+
+after_imputation_table <-
+  tbl_summary(
+    complete_data,
+    by = DxCancer, # split table by group
+    statistic = list(
+      all_continuous() ~ "{mean} ({min} - {max}), {median} ({p25} - {p75})"
+    ),
+    missing = "ifany" # don't list missing data separately
+  ) |> 
+  add_p() |> # test for a difference between groups
+  modify_header(label = "**Variable**") |> # update the column header
+  modify_header(c(stat_1, stat_2) ~ "**DxCancer**_{level}_ (n={n})") |>
+  bold_labels() |>
+  as_gt() |> 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(size = px(10))  # Réduction de la taille de la police
+    ),
+    locations = list(
+      gt::cells_body(),              # Corps du tableau
+      gt::cells_column_labels(),  # En-têtes de colonnes
+      gt::cells_title()        
+    )
+  )
+
+
+```
+
+
+**Table 5 : Patients characteristics before/after imputation**
+`r sum_char_with_without_imp`
+
+**Table 6 : difference test before/after imputation**
+`r comp_with_without_imp`
+
+**Table 7 : characteristics patients**
+`r after_imputation_table`
+
+```{r change data into complete data, echo = FALSE, message=FALSE, warning=FALSE}
+
+data = complete_data
+```

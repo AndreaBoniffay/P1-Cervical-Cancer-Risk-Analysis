@@ -1,0 +1,5 @@
+
+ ```{r, echo=FALSE, message=FALSE}
+ library(bookdown)
+ render_book("_bookdown.yml")
+ ```

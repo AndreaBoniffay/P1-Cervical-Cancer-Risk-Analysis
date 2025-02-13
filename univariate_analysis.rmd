@@ -1,0 +1,210 @@
+
+# Univariate Analysis
+
+
+```{r Quantitative variable distribution functions, echo = FALSE, message=FALSE, warning=FALSE, fig.height = 6}
+
+#Creation of the histograme for each quantitative variable
+quantitative_variables_hist_plots <- function(data){
+
+  quantitative_plot <- list()
+  
+  for (col_name in colnames(data)) {
+    if (col_name %in% quantitative_variable_names) {
+      p <- ggplot(data, aes_string(x = col_name)) +
+      geom_histogram(binwidth = 1, fill = "#28adff", color = "black", alpha = 0.7) +  
+      labs(title = paste(col_name, "histogram"), x = col_name, y = "Count") +
+      theme_minimal() +
+      theme(plot.title = element_text(size = 10),
+            plot.margin = unit(c(3, 0, 0, 0), "lines"))
+
+      quantitative_plot[[paste0(col_name)]] <- p
+      }
+   }
+  return(quantitative_plot)
+} 
+
+#Creation of the box for each quantitative variable
+quantitative_variables_box_plots <- function(data){
+
+  quantitative_plot <- list()
+  
+  for (col_name in colnames(data)) {
+    if (col_name %in% quantitative_variable_names) {
+      p <- ggplot(data, aes_string(x = col_name)) +
+      geom_boxplot()+
+       labs(title = paste(col_name, "boxplot"))+
+      theme(plot.title = element_text(size = 10),
+            plot.margin = unit(c(3, 0, 0, 1), "lines"))
+
+      quantitative_plot[[paste0(col_name)]] <- p
+      }
+  }
+  return(quantitative_plot)
+} 
+
+
+#Creation of the statistic table for each quantitative variable
+quantitative_variables_statistics <- function(data){
+
+  quantitative_plot <- list()
+
+    for (col_name in colnames(data)) {
+    if (col_name %in% quantitative_variable_names) {
+
+      column_data <- data[[col_name]]
+      
+      n <- length(column_data)
+      variance <- round(var(column_data, na.rm = TRUE),2)
+      sum_val <- round(sum(column_data, na.rm = TRUE),2)
+      sd_val <- round(sd(column_data, na.rm = TRUE),2)
+      mean_val <- round(mean(column_data, na.rm = TRUE),2)
+      skewness_val <- round(skewness(column_data, na.rm = TRUE),2)
+      mode_val <- as.numeric(names(sort(table(column_data), decreasing = TRUE)[1]))
+      kurtosis_val <- round(kurtosis(column_data, na.rm = TRUE),2)
+      q1 <- as.numeric(quantile(column_data, 0.25, na.rm = TRUE))
+      q2 <- median(column_data, na.rm = TRUE)
+      q3 <- as.numeric(quantile(column_data, 0.75, na.rm = TRUE))
+      min_val <- min(column_data, na.rm = TRUE)
+      max_val <- max(column_data, na.rm = TRUE)
+      range_val <- max_val - min_val
+      iqr_val <- q3 - q1
+
+      stats <- data.frame(
+        
+        `Sample Size, n` = n,
+        `Sum` = sum_val,
+        `Mean` = mean_val,
+        `Mode` = mode_val,
+        `Q1` = q1,
+        `Q2 (Median)` = q2,
+        `Q3` = q3,
+        `IQR Q3-Q1` = iqr_val,
+        `Variance` = variance,
+        `Standard Deviation` = sd_val,
+        `Skewness` = skewness_val,
+        `Kurtosis` = kurtosis_val,
+        `Minimum` = min_val,
+        `Maximum` = max_val,
+        `Range : Maximum-Minimum` = range_val,
+        check.names = FALSE
+      )
+     #convert into a grob object to insert as a "graph" 
+      stats <- t(stats)
+      stats_table <- tableGrob(
+        stats,
+        theme = ttheme_minimal(
+          core = list(
+            fg_params = list(fontfamily = "Cambria", fontsize = 8),
+            padding = unit(c(3, 3), "mm")  
+          ),
+          rowhead = list(
+            fg_params = list(fontfamily = "Cambria", fontsize = 8),
+            padding = unit(c(3, 3), "mm") 
+          )
+        )
+      )
+
+      quantitative_plot[[paste0(col_name)]] <- stats_table
+        }
+     }
+    return(quantitative_plot)
+    }
+
+
+```
+
+
+```{r Qualitative variable distribution functions, echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+#Creation of the piechart for each qualitative variable
+qualitative_variables_plots <- function(data){
+
+  qualitative_plot <- list()
+
+  for (col_name in colnames(data)) {
+    if (col_name %in% qualitative_variable_names) {
+      num_modalities <- length(unique(data[[col_name]]))
+      if (num_modalities <= 6) {
+        data_summary <- data.frame(table(data[[col_name]]))
+        colnames(data_summary) <- c("value", "count")
+        data_summary <- rbind(data_summary, data.frame(value = "NA", count = (length(data$ID) - sum(data_summary$count))))
+        data_summary$percentage <- data_summary$count / sum(data_summary$count) * 100
+
+        data_summary$legend_label <- paste0(data_summary$value, " (", data_summary$count, " - ", round(data_summary$percentage, 1), "%)")
+
+        p <- ggplot(data_summary, aes(x = "", y = percentage, fill = legend_label)) +  
+          geom_bar(stat = "identity", width = 1, color = "white") +
+          coord_polar(theta = "y") +
+          labs(title = paste(col_name, "Pie Chart"), x = NULL, y = NULL) +
+          theme_void() +
+          theme(legend.title = element_blank()) +
+          theme(plot.title = element_text(size = 10)) +
+          scale_fill_manual(values = c("#8a9be7","#d0cece" ,"#b4caed" ))
+
+        qualitative_plot[[col_name]] <- p
+
+      } else {
+        p <- ggplot(data, aes_string(x = col_name)) +
+          geom_bar(fill = "#3b6bfb", color = "black", alpha = 0.7) +
+          labs(title = paste("Barplot of", col_name), x = col_name, y = "Count") +
+          theme_minimal() +
+          theme(plot.title = element_text(size = 10))
+        
+        qualitative_plot[[col_name]] <- p
+      }
+    }
+  }
+  return(qualitative_plot)
+}
+```
+
+
+```{r aes_columns_display functions, echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+#aesthetic fonction that can modulate the number of the display columns
+aes_columns_display <- function(plot_list, nb_columns) {
+  for (cindex in seq(nb_columns, length(plot_list), by = nb_columns)) {
+    start_index <- (cindex - nb_columns) + 1
+    end_index <- cindex
+    do.call("grid.arrange", c(plot_list[start_index:end_index], ncol = nb_columns))
+  }
+
+  if (length(plot_list) %% nb_columns != 0) {
+    start_index <- (floor(length(plot_list) / nb_columns) * nb_columns) + 1
+    do.call("grid.arrange", c(plot_list[start_index:length(plot_list)], ncol = nb_columns))
+  }
+}
+
+```
+
+
+## Quantitative variables
+### Distribution and Statistics
+```{r reassort plot and statistic list : quantitative ,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+#execute each fonction (histogramme/boxplot/statistique table)
+quantitative_variables_hist_plots_list <- quantitative_variables_hist_plots(data)
+quantitative_variables_box_plots_list <- quantitative_variables_box_plots(data)
+quantitative_variables_statistics_list <- quantitative_variables_statistics(data)
+
+#reassort the list to have hist/boxplot/stats on the same line for the same variable into the report 
+quantitative_variable_global_list <- list()
+
+for (col_name in colnames(data)) {
+      if (col_name %in% quantitative_variable_names) {
+          quantitative_variable_global_list[[paste0(col_name,"_hist")]] <- quantitative_variables_hist_plots_list[[col_name]]
+          quantitative_variable_global_list[[paste0(col_name,"_box")]] <- quantitative_variables_box_plots_list[[col_name]]
+          quantitative_variable_global_list[[paste0(col_name,"_stats")]] <- quantitative_variables_statistics_list[[col_name]]
+        }
+      }
+
+```
+```{r plot quantitative variables,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+#Display the 3 objects on one line for each variable
+aes_columns_display(quantitative_variable_global_list,3)
+```
+
+## Qualitative variables
+### Vizualisation and Statistics
+```{r plot qualitative variable,echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4}
+#execute the pieachart fonction for the qualitative variable and use the aes_columns_display() for displaying in 2 columns in report
+aes_columns_display(qualitative_variables_plots(data),2)
+```
