@@ -27,11 +27,11 @@ Pour ce projet, nous utilisons la base de données : *Breast Cancer Wisconsin (D
 
 1. Cloner le dépôt :
    ```bash
-   git clone https://github.com/AndreaBoniffay/statistical_report.git
+   git clone https://github.com/AndreaBoniffay/P1-Cervical-Cancer-Risk-Analysis.git
    ```
 2. Accéder au dossier du projet :
    ```bash
-   cd statistical_report
+   cd P1-Cervical-Cancer-Risk-Analysis
    ```
 3. Installer les dépendances :
 
