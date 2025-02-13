@@ -6,9 +6,9 @@
 ##  Description
 
 Ce projet a pour objectif d'effectuer une analyse statistique du risque de développer un cancer du col de l'utérus.  
+
+
 Un rapport statistique détaillé est disponible sur la page GitHub : [👉 Statistical Report](https://andreaboniffay.github.io/P1-Cervical-Cancer-Risk-Analysis/about-this-work.html)  
-
-
 Un résumé de ce rapport est disponible sous forme d'article dans le repo : [👉 Article](https://github.com/AndreaBoniffay/P1-Cervical-Cancer-Risk-Analysis/blob/main/Article_cervical_cancer.pdf)  
 
 
