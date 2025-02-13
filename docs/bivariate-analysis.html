@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>5 Bivariate Analysis | Statistic Report</title>
+  <meta name="description" content="5 Bivariate Analysis | Statistic Report" />
+  <meta name="generator" content="bookdown 0.40 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="5 Bivariate Analysis | Statistic Report" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="5 Bivariate Analysis | Statistic Report" />
+  
+  
+  
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="univariate-analysis.html"/>
+<link rel="next" href="multivariate-analysis.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.4/plotly.js"></script>
+<script src="libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
+<script src="libs/scatterD3-binding-1.0.1/scatterD3.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="about-this-work.html"><a href="about-this-work.html"><i class="fa fa-check"></i><b>1</b> About this work</a></li>
+<li class="chapter" data-level="2" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>2</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="introduction.html"><a href="introduction.html#contexte-et-objectifs"><i class="fa fa-check"></i><b>2.1</b> Contexte et objectifs</a></li>
+<li class="chapter" data-level="2.2" data-path="introduction.html"><a href="introduction.html#description-des-données"><i class="fa fa-check"></i><b>2.2</b> Description des données</a></li>
+<li class="chapter" data-level="2.3" data-path="introduction.html"><a href="introduction.html#problématique"><i class="fa fa-check"></i><b>2.3</b> Problématique</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="preprocessing.html"><a href="preprocessing.html"><i class="fa fa-check"></i><b>3</b> Preprocessing</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="preprocessing.html"><a href="preprocessing.html#global-overview-of-the-initial-datset"><i class="fa fa-check"></i><b>3.1</b> Global overview of the initial datset</a></li>
+<li class="chapter" data-level="3.2" data-path="preprocessing.html"><a href="preprocessing.html#global-overview-of-initial-variables"><i class="fa fa-check"></i><b>3.2</b> Global overview of initial variables</a></li>
+<li class="chapter" data-level="3.3" data-path="preprocessing.html"><a href="preprocessing.html#na-distribution"><i class="fa fa-check"></i><b>3.3</b> NA Distribution</a></li>
+<li class="chapter" data-level="3.4" data-path="preprocessing.html"><a href="preprocessing.html#unique-value"><i class="fa fa-check"></i><b>3.4</b> Unique value</a></li>
+<li class="chapter" data-level="3.5" data-path="preprocessing.html"><a href="preprocessing.html#duplications"><i class="fa fa-check"></i><b>3.5</b> Duplications</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="preprocessing.html"><a href="preprocessing.html#patient-duplication"><i class="fa fa-check"></i><b>3.5.1</b> Patient duplication</a></li>
+<li class="chapter" data-level="3.5.2" data-path="preprocessing.html"><a href="preprocessing.html#variable-duplication"><i class="fa fa-check"></i><b>3.5.2</b> Variable duplication</a></li>
+</ul></li>
+<li class="chapter" data-level="3.6" data-path="preprocessing.html"><a href="preprocessing.html#aberant-value"><i class="fa fa-check"></i><b>3.6</b> Aberant value</a></li>
+<li class="chapter" data-level="3.7" data-path="preprocessing.html"><a href="preprocessing.html#imputation"><i class="fa fa-check"></i><b>3.7</b> Imputation</a>
+<ul>
+<li class="chapter" data-level="3.7.1" data-path="preprocessing.html"><a href="preprocessing.html#global-overview-of-variable-imputations"><i class="fa fa-check"></i><b>3.7.1</b> Global overview of variable imputations</a></li>
+<li class="chapter" data-level="3.7.2" data-path="preprocessing.html"><a href="preprocessing.html#difference-test"><i class="fa fa-check"></i><b>3.7.2</b> Difference test</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="univariate-analysis.html"><a href="univariate-analysis.html"><i class="fa fa-check"></i><b>4</b> Univariate Analysis</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="univariate-analysis.html"><a href="univariate-analysis.html#quantitative-variables"><i class="fa fa-check"></i><b>4.1</b> Quantitative variables</a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="univariate-analysis.html"><a href="univariate-analysis.html#distribution-and-statistics"><i class="fa fa-check"></i><b>4.1.1</b> Distribution and Statistics</a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="univariate-analysis.html"><a href="univariate-analysis.html#qualitative-variables"><i class="fa fa-check"></i><b>4.2</b> Qualitative variables</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="univariate-analysis.html"><a href="univariate-analysis.html#vizualisation-and-statistics"><i class="fa fa-check"></i><b>4.2.1</b> Vizualisation and Statistics</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="bivariate-analysis.html"><a href="bivariate-analysis.html"><i class="fa fa-check"></i><b>5</b> Bivariate Analysis</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="bivariate-analysis.html"><a href="bivariate-analysis.html#quantitative-vs-outcome"><i class="fa fa-check"></i><b>5.1</b> Quantitative VS Outcome</a>
+<ul>
+<li class="chapter" data-level="5.1.1" data-path="bivariate-analysis.html"><a href="bivariate-analysis.html#vizualisation"><i class="fa fa-check"></i><b>5.1.1</b> Vizualisation</a></li>
+<li class="chapter" data-level="5.1.2" data-path="bivariate-analysis.html"><a href="bivariate-analysis.html#statistics"><i class="fa fa-check"></i><b>5.1.2</b> Statistics</a></li>
+</ul></li>
+<li class="chapter" data-level="5.2" data-path="bivariate-analysis.html"><a href="bivariate-analysis.html#qualitative-vs-outcome"><i class="fa fa-check"></i><b>5.2</b> Qualitative VS Outcome</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="bivariate-analysis.html"><a href="bivariate-analysis.html#vizualisation-and-statistics-1"><i class="fa fa-check"></i><b>5.2.1</b> Vizualisation and statistics</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="multivariate-analysis.html"><a href="multivariate-analysis.html"><i class="fa fa-check"></i><b>6</b> Multivariate Analysis</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="multivariate-analysis.html"><a href="multivariate-analysis.html#descriptive"><i class="fa fa-check"></i><b>6.1</b> Descriptive</a>
+<ul>
+<li class="chapter" data-level="6.1.1" data-path="multivariate-analysis.html"><a href="multivariate-analysis.html#standardisation-dummification"><i class="fa fa-check"></i><b>6.1.1</b> Standardisation &amp; Dummification</a></li>
+<li class="chapter" data-level="6.1.2" data-path="multivariate-analysis.html"><a href="multivariate-analysis.html#pca-principal-composante-analysis"><i class="fa fa-check"></i><b>6.1.2</b> PCA (Principal Composante Analysis)</a></li>
+<li class="chapter" data-level="6.1.3" data-path="multivariate-analysis.html"><a href="multivariate-analysis.html#mca-multiple-correspondence-analysis"><i class="fa fa-check"></i><b>6.1.3</b> MCA (Multiple correspondence analysis)</a></li>
+<li class="chapter" data-level="6.1.4" data-path="multivariate-analysis.html"><a href="multivariate-analysis.html#famd-factoriel-analysis-mixed-data"><i class="fa fa-check"></i><b>6.1.4</b> FAMD (Factoriel Analysis Mixed Data)</a></li>
+</ul></li>
+<li class="chapter" data-level="6.2" data-path="multivariate-analysis.html"><a href="multivariate-analysis.html#explicative"><i class="fa fa-check"></i><b>6.2</b> Explicative</a>
+<ul>
+<li class="chapter" data-level="6.2.1" data-path="multivariate-analysis.html"><a href="multivariate-analysis.html#logistic-regression-model"><i class="fa fa-check"></i><b>6.2.1</b> Logistic Regression model</a></li>
+</ul></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Statistic Report</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="bivariate-analysis" class="section level1 hasAnchor" number="5">
+<h1><span class="header-section-number">5</span> Bivariate Analysis<a href="bivariate-analysis.html#bivariate-analysis" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="quantitative-vs-outcome" class="section level2 hasAnchor" number="5.1">
+<h2><span class="header-section-number">5.1</span> Quantitative VS Outcome<a href="bivariate-analysis.html#quantitative-vs-outcome" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Outcome = <code>DxCancer</code></p>
+<div id="vizualisation" class="section level3 hasAnchor" number="5.1.1">
+<h3><span class="header-section-number">5.1.1</span> Vizualisation<a href="bivariate-analysis.html#vizualisation" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="boxplots-by-diagnosis" class="section level4 hasAnchor" number="5.1.1.1">
+<h4><span class="header-section-number">5.1.1.1</span> Boxplots by diagnosis<a href="bivariate-analysis.html#boxplots-by-diagnosis" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20plots%20-1.png" width="768" /><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20plots%20-2.png" width="768" /><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20plots%20-3.png" width="768" /><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20plots%20-4.png" width="768" /><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20plots%20-5.png" width="768" /></p>
+</div>
+<div id="density-plots-by-diagnosis" class="section level4 hasAnchor" number="5.1.1.2">
+<h4><span class="header-section-number">5.1.1.2</span> Density plots by diagnosis<a href="bivariate-analysis.html#density-plots-by-diagnosis" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20density%20-1.png" width="768" /><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20density%20-2.png" width="768" /><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20density%20-3.png" width="768" /><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20density%20-4.png" width="768" /><img src="_main_files/figure-html/Quantitative%20VS%20Outcome%20density%20-5.png" width="768" /></p>
+</div>
+</div>
+<div id="statistics" class="section level3 hasAnchor" number="5.1.2">
+<h3><span class="header-section-number">5.1.2</span> Statistics<a href="bivariate-analysis.html#statistics" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>This statistical section will allow us to observe whether there is a
+significant difference between patients diagnosed with cervical cancer and
+undiagnosed patients according to the different quantitative variables in the study.
+We begin by testing the normality of the variables to find out the appropriate statistical test to use.</p>
+<div id="hypothesis-verification" class="section level4 hasAnchor" number="5.1.2.1">
+<h4><span class="header-section-number">5.1.2.1</span> hypothesis verification<a href="bivariate-analysis.html#hypothesis-verification" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<div id="normality-test-for-continuous-variables" class="section level5 hasAnchor" number="5.1.2.1.1">
+<h5><span class="header-section-number">5.1.2.1.1</span> Normality test for continuous variables<a href="bivariate-analysis.html#normality-test-for-continuous-variables" class="anchor-section" aria-label="Anchor link to header"></a></h5>
+<div id="shapiro" class="section level6 hasAnchor" number="5.1.2.1.1.1">
+<h6><span class="header-section-number">5.1.2.1.1.1</span> Shapiro<a href="bivariate-analysis.html#shapiro" class="anchor-section" aria-label="Anchor link to header"></a></h6>
+<pre><code>## 
+## Shapiro Test Result for Age distribution :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  data[[var]]
+## W = 0.91463, p-value &lt; 2.2e-16
+## 
+## 
+## 
+## Shapiro Test Result for SmokesYears distribution :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  data[[var]]
+## W = 0.33745, p-value &lt; 2.2e-16
+## 
+## 
+## 
+## Shapiro Test Result for SmokesPacksPerYear distribution :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  data[[var]]
+## W = 0.20299, p-value &lt; 2.2e-16
+## 
+## 
+## 
+## Shapiro Test Result for HormonalContraceptivesYears distribution :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  data[[var]]
+## W = 0.61285, p-value &lt; 2.2e-16
+## 
+## 
+## 
+## Shapiro Test Result for IUDYears distribution :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  data[[var]]
+## W = 0.26828, p-value &lt; 2.2e-16</code></pre>
+</div>
+<div id="qqplot" class="section level6 hasAnchor" number="5.1.2.1.1.2">
+<h6><span class="header-section-number">5.1.2.1.1.2</span> QQplot<a href="bivariate-analysis.html#qqplot" class="anchor-section" aria-label="Anchor link to header"></a></h6>
+<p><img src="_main_files/figure-html/qq%20visualisation%20-1.png" width="480" /><img src="_main_files/figure-html/qq%20visualisation%20-2.png" width="480" /><img src="_main_files/figure-html/qq%20visualisation%20-3.png" width="480" /><img src="_main_files/figure-html/qq%20visualisation%20-4.png" width="480" /><img src="_main_files/figure-html/qq%20visualisation%20-5.png" width="480" /></p>
+</div>
+</div>
+<div id="variances-test-for-continuous-variables" class="section level5 hasAnchor" number="5.1.2.1.2">
+<h5><span class="header-section-number">5.1.2.1.2</span> Variances test for continuous variables<a href="bivariate-analysis.html#variances-test-for-continuous-variables" class="anchor-section" aria-label="Anchor link to header"></a></h5>
+<p>None of the distributions is normal. The Wilcoxon test will be used.</p>
+</div>
+</div>
+<div id="test-choice" class="section level4 hasAnchor" number="5.1.2.2">
+<h4><span class="header-section-number">5.1.2.2</span> test choice<a href="bivariate-analysis.html#test-choice" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p>The wilcoxon test will allow us to establish whether there is a significant difference between
+patients diagnosed with cancer and those not diagnosed for the different quantitative variables in the study.</p>
+<pre><code>## $Age
+## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  data[[var]] by data[[Outcome]]
+## W = 4081, p-value = 0.0008185
+## alternative hypothesis: true location shift is not equal to 0
+## 95 percent confidence interval:
+##  -10.999968  -3.000034
+## sample estimates:
+## difference in location 
+##              -7.000036 
+## 
+## 
+## $SmokesYears
+## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  data[[var]] by data[[Outcome]]
+## W = 7722, p-value = 0.7989
+## alternative hypothesis: true location shift is not equal to 0
+## 95 percent confidence interval:
+##  -4.452432e-05  2.522278e-05
+## sample estimates:
+## difference in location 
+##           4.178817e-05 
+## 
+## 
+## $SmokesPacksPerYear
+## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  data[[var]] by data[[Outcome]]
+## W = 7795.5, p-value = 0.7109
+## alternative hypothesis: true location shift is not equal to 0
+## 95 percent confidence interval:
+##  -3.137115e-05  2.744888e-05
+## sample estimates:
+## difference in location 
+##           3.289976e-05 
+## 
+## 
+## $HormonalContraceptivesYears
+## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  data[[var]] by data[[Outcome]]
+## W = 5835, p-value = 0.08294
+## alternative hypothesis: true location shift is not equal to 0
+## 95 percent confidence interval:
+##  -1.000008e+00  7.496806e-05
+## sample estimates:
+## difference in location 
+##             -0.1599832 
+## 
+## 
+## $IUDYears
+## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  data[[var]] by data[[Outcome]]
+## W = 5676, p-value = 0.0004155
+## alternative hypothesis: true location shift is not equal to 0
+## 95 percent confidence interval:
+##  -4.742399e-05 -8.473639e-06
+## sample estimates:
+## difference in location 
+##          -2.715196e-05</code></pre>
+<p>The statistical test assumes that there is a statistically significant difference between the groups for age, IUDYears (Years of IUD use) (p-value &lt; 0.05)</p>
+</div>
+<div id="size-effect" class="section level4 hasAnchor" number="5.1.2.3">
+<h4><span class="header-section-number">5.1.2.3</span> Size effect :<a href="bivariate-analysis.html#size-effect" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<pre><code>## 
+## Cohen&#39;s d Result for Age by Cancer diagnosis is:
+## 
+## Cohen&#39;s d
+## 
+## d estimate: 0.7737423 (medium)
+## 95 percent confidence interval:
+##     lower     upper 
+## 0.3047547 1.2427298 
+## 
+## 
+## 
+## Cohen&#39;s d Result for SmokesYears by Cancer diagnosis is:
+## 
+## Cohen&#39;s d
+## 
+## d estimate: 0.3689209 (small)
+## 95 percent confidence interval:
+##       lower       upper 
+## -0.09895816  0.83680002 
+## 
+## 
+## 
+## Cohen&#39;s d Result for SmokesPacksPerYear by Cancer diagnosis is:
+## 
+## Cohen&#39;s d
+## 
+## d estimate: 0.7516706 (medium)
+## 95 percent confidence interval:
+##     lower     upper 
+## 0.2827636 1.2205775 
+## 
+## 
+## 
+## Cohen&#39;s d Result for HormonalContraceptivesYears by Cancer diagnosis is:
+## 
+## Cohen&#39;s d
+## 
+## d estimate: 0.4539348 (small)
+## 95 percent confidence interval:
+##       lower       upper 
+## -0.01411213  0.92198164 
+## 
+## 
+## 
+## Cohen&#39;s d Result for IUDYears by Cancer diagnosis is:
+## 
+## Cohen&#39;s d
+## 
+## d estimate: 0.7227514 (medium)
+## 95 percent confidence interval:
+##     lower     upper 
+## 0.2539465 1.1915563</code></pre>
+</div>
+</div>
+</div>
+<div id="qualitative-vs-outcome" class="section level2 hasAnchor" number="5.2">
+<h2><span class="header-section-number">5.2</span> Qualitative VS Outcome<a href="bivariate-analysis.html#qualitative-vs-outcome" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="vizualisation-and-statistics-1" class="section level3 hasAnchor" number="5.2.1">
+<h3><span class="header-section-number">5.2.1</span> Vizualisation and statistics<a href="bivariate-analysis.html#vizualisation-and-statistics-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The Pearson’s Chi-squared test will allow us to establish whether there is a significant difference between
+patients diagnosed with cancer and those not diagnosed for the different qualitative variables in the study.</p>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-1.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for Smokes and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.2518e-28, df = 1, p-value = 1
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for Smokes and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1 0.007687 0.001149  0.08326</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-2.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for HormonalContraceptives and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.2268, df = 1, p-value = 0.268
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for HormonalContraceptives and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.04602 0.003068   0.1035</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-3.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for IUD and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 0.80291, df = 1, p-value = 0.3702
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for IUD and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.04042 0.002176   0.1237</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-4.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDs and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 0.60649, df = 1, p-value = 0.4361
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDs and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.03651 0.003589  0.08024</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-5.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsCondylomatosis and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 2.7266, df = 1, p-value = 0.09869
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsCondylomatosis and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.06711  0.05147  0.08365</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-6.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsVaginalCondylomatosis and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.6335, df = 1, p-value = 0.2012
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsVaginalCondylomatosis and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.05584  0.04121  0.06989</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-7.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsVulvoPerinealCondylomatosis and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 2.6976, df = 1, p-value = 0.1005
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsVulvoPerinealCondylomatosis and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.06683  0.05011  0.08158</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-8.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsSyphilis and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 2, df = 1, p-value = 0.1573
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsSyphilis and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.05988  0.04294  0.07402</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-9.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsPelvicInflammatoryDisease and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.5572, df = 1, p-value = 0.2121
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsPelvicInflammatoryDisease and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.05496  0.04021  0.06917</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-10.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsGenitalHerpes and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.532, df = 1, p-value = 0.2158
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsGenitalHerpes and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.05466  0.03949  0.06824</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-11.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsMolluscumContagiosum and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.532, df = 1, p-value = 0.2158
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsMolluscumContagiosum and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.05466  0.04092  0.06804</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-12.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsHIV and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 2, df = 1, p-value = 0.1573
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsHIV and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.05988  0.04448  0.07505</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-13.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsHepatitisB and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.532, df = 1, p-value = 0.2158
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsHepatitisB and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.05466  0.03974  0.06815</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-14.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for STDsHPV and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.1692e-27, df = 1, p-value = 1
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for STDsHPV and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1 0.006025 0.001008  0.06764</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-15.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for DxCIN and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 1.6851e-30, df = 1, p-value = 1
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for DxCIN and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1  0.01507       NA       NA</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-16.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for DxHPV and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 631.83, df = 1, p-value &lt; 2.2e-16
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for DxHPV and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1   0.8865   0.7549        1</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-17.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for Dx and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 352.52, df = 1, p-value &lt; 2.2e-16
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for Dx and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1   0.6656   0.4754   0.8136</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-18.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for Hinselmann and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 11.093, df = 1, p-value = 0.0008664
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for Hinselmann and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1   0.1343  0.01764   0.2845</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-19.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for Schiller and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 17.626, df = 1, p-value = 2.689e-05
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for Schiller and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1   0.1578  0.04032   0.2822</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-20.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for Cytology and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 7.7453, df = 1, p-value = 0.005385
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for Cytology and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1   0.1134  0.01004   0.2541</code></pre>
+<p><img src="_main_files/figure-html/Qualitative%20display%20-21.png" width="480" /></p>
+<pre><code>## 
+## Chi-Square Test Result for Biopsy and DxCancer association :
+## 
+##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+## 
+## data:  table_res
+## X-squared = 17.867, df = 1, p-value = 2.369e-05
+## 
+## 
+## 
+## ------------- Effect size : ------------
+## 
+## Cramer V Test Result for Biopsy and DxCancer association :
+##   Cramer.V lower.ci upper.ci
+## 1   0.1609  0.03399   0.2922</code></pre>
+<p>The statistical test assumes that there is a statistically significant difference between the groups for IUD (IUD use), DxHPV, Dx, Hinselmann, Schiller, Cytology, Biopsy (p-value &lt; 0.05)</p>
+<div id="odd-ratios" class="section level4 hasAnchor" number="5.2.1.1">
+<h4><span class="header-section-number">5.2.1.1</span> Odd Ratios :<a href="bivariate-analysis.html#odd-ratios" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p><strong>Table 7 : Odds Ratios</strong></p>
+<table>
+<colgroup>
+<col width="36%" />
+<col width="63%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">explanatory</th>
+<th align="left">OR (univarié)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">SmokesTRUE</td>
+<td align="left">1.15 (0.26-3.56, p=0.822)</td>
+</tr>
+<tr class="even">
+<td align="left">HormonalContraceptivesTRUE</td>
+<td align="left">2.02 (0.75-6.33, p=0.186)</td>
+</tr>
+<tr class="odd">
+<td align="left">IUDTRUE</td>
+<td align="left">1.81 (0.62-4.72, p=0.243)</td>
+</tr>
+<tr class="even">
+<td align="left">STDsTRUE</td>
+<td align="left">0.46 (0.07-1.62, p=0.297)</td>
+</tr>
+<tr class="odd">
+<td align="left">STDsCondylomatosisTRUE</td>
+<td align="left">0.00 (NA-413279962457701632.00, p=0.986)</td>
+</tr>
+<tr class="even">
+<td align="left">STDsVaginalCondylomatosisTRUE</td>
+<td align="left">0.00 (NA-6470815448401568596048.00, p=0.988)</td>
+</tr>
+<tr class="odd">
+<td align="left">STDsVulvoPerinealCondylomatosisTRUE</td>
+<td align="left">0.00 (NA-501249091130456448.00, p=0.986)</td>
+</tr>
+<tr class="even">
+<td align="left">STDsSyphilisTRUE</td>
+<td align="left">0.00 (NA-129802804952780881920.00, p=0.987)</td>
+</tr>
+<tr class="odd">
+<td align="left">STDsPelvicInflammatoryDiseaseTRUE</td>
+<td align="left">0.00 (NA-16502381924089537233646.00, p=0.988)</td>
+</tr>
+<tr class="even">
+<td align="left">STDsGenitalHerpesTRUE</td>
+<td align="left">0.00 (NA-22746175802726651266684.00, p=0.988)</td>
+</tr>
+<tr class="odd">
+<td align="left">STDsMolluscumContagiosumTRUE</td>
+<td align="left">0.00 (NA-22746175802586850918400.00, p=0.988)</td>
+</tr>
+<tr class="even">
+<td align="left">STDsHIVTRUE</td>
+<td align="left">0.00 (NA-129802804956952461312.00, p=0.987)</td>
+</tr>
+<tr class="odd">
+<td align="left">STDsHepatitisBTRUE</td>
+<td align="left">0.00 (NA-22746175801847755834604.00, p=0.988)</td>
+</tr>
+<tr class="even">
+<td align="left">STDsHPVTRUE</td>
+<td align="left">0.88 (0.14-3.13, p=0.860)</td>
+</tr>
+<tr class="odd">
+<td align="left">DxCINTRUE</td>
+<td align="left">0.00 (NA-9848334937800193784028620046468628826428.00, p=0.992)</td>
+</tr>
+<tr class="even">
+<td align="left">DxHPVTRUE</td>
+<td align="left">3352.00 (570.18-36305.95, p&lt;0.001)</td>
+</tr>
+<tr class="odd">
+<td align="left">DxTRUE</td>
+<td align="left">290.50 (88.20-1181.08, p&lt;0.001)</td>
+</tr>
+<tr class="even">
+<td align="left">HinselmannTRUE</td>
+<td align="left">7.46 (2.02-22.22, p=0.001)</td>
+</tr>
+<tr class="odd">
+<td align="left">SchillerTRUE</td>
+<td align="left">7.34 (2.63-19.28, p&lt;0.001)</td>
+</tr>
+<tr class="even">
+<td align="left">CytologyTRUE</td>
+<td align="left">5.71 (1.57-16.79, p=0.003)</td>
+</tr>
+<tr class="odd">
+<td align="left">BiopsyTRUE</td>
+<td align="left">8.07 (2.71-21.74, p&lt;0.001)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="univariate-analysis.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="multivariate-analysis.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+</body>
+
+</html>
