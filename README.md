@@ -53,5 +53,5 @@ Ce projet est sous licence MIT - voir le fichier [📄 LICENSE](LICENSE) pour pl
 
 ##  Contact
 
-[📩 Andréa Boniffay](https://andreaboniffay.github.io) - N'hésitez pas à me contacter ! 
+[📩 Andréa Boniffay](https://andreaboniffay.github.io) - N'hésitez pas ;) 
 
